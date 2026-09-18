@@ -40,3 +40,4 @@ python -m unittest discover -s tests -v
 ```
 
 The current account model is one administrator. Supabase authentication and multiple roles are not implemented in this package.
+Author：Guo Yu
