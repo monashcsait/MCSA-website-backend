@@ -1,0 +1,22 @@
+[Unit]
+Description=MCSA content management and published content API
+After=network.target
+
+[Service]
+Type=simple
+User=mcsa
+Group=mcsa
+WorkingDirectory=/opt/mcsa-backend
+Environment=PORT=8000
+Environment=MCSA_HOST=127.0.0.1
+Environment=MCSA_INSTANCE=/var/lib/mcsa-backend
+EnvironmentFile=-/etc/mcsa-backend.env
+ExecStart=/opt/mcsa-backend/.venv/bin/python /opt/mcsa-backend/start.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

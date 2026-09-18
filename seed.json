@@ -1,0 +1,1291 @@
+{
+  "pages": {
+    "latest-events": {
+      "title": {
+        "zh": "最新活动",
+        "en": "Latest Events",
+        "hant": "最新活動"
+      },
+      "paragraphs": [
+        {
+          "zh": "我们会定期发布迎新、社交、节日庆祝、职业分享和文化交流活动。",
+          "en": "We regularly publish updates for orientation, social events, cultural celebrations, career sessions and community activities.",
+          "hant": "我們會定期發佈迎新、社交、節日慶祝、職業分享和文化交流活動。"
+        }
+      ]
+    },
+    "about": {
+      "title": {
+        "zh": "关于我们",
+        "en": "About Us",
+        "hant": "關於我們"
+      },
+      "paragraphs": [
+        {
+          "zh": "蒙纳士中国学生会（MCSA）于2000年成立，总部位于蒙纳士大学 Caulfield 校区，由蒙纳士中国留学生自发组建，并经蒙纳士大学校方认证。同时，MCSA 也是中国驻墨尔本总领事馆教育处在蒙纳士校内唯一认证的中国海外留学生组织。",
+          "en": "Founded in 2000, the Monash Chinese Students Association (MCSA) is based at Monash University’s Caulfield campus. Established by Chinese international students and recognised by the university, MCSA is also the only Chinese overseas student organisation at Monash recognised by the Education Office of the Chinese Consulate-General in Melbourne.",
+          "hant": "蒙納士中國學生會（MCSA）於2000年成立，總部位於蒙納士大學 Caulfield 校區，由蒙納士中國留學生自發組建，並經蒙納士大學校方認證。同時，MCSA 也是中國駐墨爾本總領事館教育處在蒙納士校內唯一認證的中國海外留學生組織。"
+        },
+        {
+          "zh": "我们活跃于微信公众号、Instagram、微博、小红书和抖音等平台。每届干事超过100人，注册会员逾15,000人，举办过多场大型活动，并持续为中国留学生整理实用攻略与指南。",
+          "en": "We connect with students through WeChat, Instagram, Weibo, Xiaohongshu and Douyin. With more than 100 committee members each term and over 15,000 registered members, MCSA has organised numerous large-scale events and continues to publish practical guides for Chinese international students.",
+          "hant": "我們活躍於微信公衆號、Instagram、微博、小紅書和抖音等平臺。每屆幹事超過100人，註冊會員逾15,000人，舉辦過多場大型活動，並持續爲中國留學生整理實用攻略與指南。"
+        },
+        {
+          "zh": "从生活到学习，从校园到职场，MCSA 希望成为同学们在澳大利亚互相支持的平台，也成为学生与企业、组织之间沟通的桥梁。",
+          "en": "From everyday life and study to opportunities beyond campus, MCSA aims to help students support one another in Australia and to build connections between students, businesses and organisations.",
+          "hant": "從生活到學習，從校園到職場，MCSA 希望成爲同學們在澳大利亞互相支持的平臺，也成爲學生與企業、組織之間溝通的橋樑。"
+        }
+      ]
+    },
+    "recruitment": {
+      "title": {
+        "zh": "部门介绍",
+        "en": "Departments",
+        "hant": "部門介紹"
+      },
+      "paragraphs": [
+        {
+          "zh": "如果你希望参与活动策划、媒体运营、设计宣传、外联合作或校园服务，欢迎加入 MCSA。",
+          "en": "If you are interested in event planning, media, design, sponsorship, partnerships or student services, you are welcome to join MCSA.",
+          "hant": "如果你希望參與活動策劃、媒體運營、設計宣傳、外聯合作或校園服務，歡迎加入 MCSA。"
+        }
+      ]
+    },
+    "campus-info": {
+      "title": {
+        "zh": "校园资讯",
+        "en": "Campus Information",
+        "hant": "校園資訊"
+      },
+      "paragraphs": [
+        {
+          "zh": "我们会整理校园生活、学习资源、社团动态和实用信息，帮助同学更好地规划学习与生活。",
+          "en": "We share useful information about campus life, study resources, society updates and student support.",
+          "hant": "我們會整理校園生活、學習資源、社團動態和實用信息，幫助同學更好地規劃學習與生活。"
+        }
+      ]
+    },
+    "past-review": {
+      "title": {
+        "zh": "往期回顾",
+        "en": "Past Highlights",
+        "hant": "往期回顧"
+      },
+      "paragraphs": [
+        {
+          "zh": "查看 MCSA 过往活动照片、精彩瞬间和社团发展记录。",
+          "en": "Explore photos, highlights and memories from previous MCSA events.",
+          "hant": "查看 MCSA 過往活動照片、精彩瞬間和社團發展記錄。"
+        }
+      ]
+    },
+    "presidents": {
+      "title": {
+        "zh": "历任主席团",
+        "en": "Presidium through the years",
+        "hant": "歷任主席團"
+      },
+      "paragraphs": [
+        {
+          "zh": "从倾听同学的想法，到把计划落到实处，主席团与各部门携手，让学生会的每一份努力回应校园所需。",
+          "en": "Listening to students and turning ideas into action, the presidium works with every department to serve our campus community.",
+          "hant": "從傾聽同學的想法，到把計劃落到實處，主席團與各部門攜手，讓學生會的每一份努力回應校園所需。"
+        }
+      ]
+    },
+    "sponsors": {
+      "title": {
+        "zh": "年度赞助",
+        "en": "Annual Sponsors",
+        "hant": "年度贊助"
+      },
+      "paragraphs": [
+        {
+          "zh": "感谢赞助商和合作伙伴对 MCSA 活动、学生服务和社区建设的支持。",
+          "en": "We appreciate the support from our sponsors and partners for MCSA events, student services and community development.",
+          "hant": "感謝贊助商和合作伙伴對 MCSA 活動、學生服務和社區建設的支持。"
+        }
+      ]
+    },
+    "contact": {
+      "title": {
+        "zh": "联系我们",
+        "en": "Contact Us",
+        "hant": "聯繫我們"
+      },
+      "paragraphs": [
+        {
+          "zh": "关注我们的社交媒体，获取最新活动和校园资讯。",
+          "en": "Follow our social media channels to receive the latest event updates and campus information.",
+          "hant": "關注我們的社交媒體，獲取最新活動和校園資訊。"
+        }
+      ]
+    },
+    "discounts": {
+      "title": {
+        "zh": "折扣商家",
+        "en": "Discount Partners",
+        "hant": "折扣商家"
+      },
+      "paragraphs": [
+        {
+          "zh": "MCSA 会与餐饮、生活服务、娱乐和学习相关商家合作，为会员提供专属优惠。",
+          "en": "MCSA partners with restaurants, services, entertainment and student-related businesses to provide exclusive member benefits.",
+          "hant": "MCSA 會與餐飲、生活服務、娛樂和學習相關商家合作，爲會員提供專屬優惠。"
+        }
+      ]
+    },
+    "home": {
+      "title": {
+        "zh": "蒙纳士中国学生会",
+        "en": "Monash Chinese\nStudents Association",
+        "hant": "蒙納士中國學生會"
+      },
+      "paragraphs": [
+        {
+          "zh": "从初到校园的第一步，到值得珍藏的大学回忆，蒙纳士中国学生会与你一起探索留学生活。我们用心筹办活动、分享实用资讯，让每一次相遇都成为新的开始。",
+          "en": "From your first day on campus to memories that last beyond university, MCSA is here to explore student life with you. Through thoughtfully planned events and useful updates, every encounter can be a new beginning.",
+          "hant": "從初到校園的第一步，到值得珍藏的大學回憶，蒙納士中國學生會與你一起探索留學生活。我們用心籌辦活動、分享實用資訊，讓每一次相遇都成爲新的開始。"
+        }
+      ]
+    },
+    "disclaimer": {
+      "title": {
+        "zh": "免责声明",
+        "en": "Disclaimer",
+        "hant": "免責聲明"
+      },
+      "paragraphs": [
+        {
+          "zh": "关于本站",
+          "en": "About this website",
+          "hant": "關於本站"
+        },
+        {
+          "zh": "本网站由蒙纳士中国学生会（MCSA）用于介绍学生会、分享活动与校园资讯。本站内容代表学生会的发布信息，不代表蒙纳士大学或其他机构的正式通知；涉及课程、签证或大学政策的信息，请以对应机构公布的内容为准。",
+          "en": "MCSA uses this website to introduce the association and share events and campus information. Its content is published by the association and is not an official notice from Monash University or another institution. Refer to the relevant institution for authoritative course, visa or university policy information.",
+          "hant": "本網站由蒙納士中國學生會（MCSA）用於介紹學生會、分享活動與校園資訊。本站內容代表學生會的發佈信息，不代表蒙納士大學或其他機構的正式通知；涉及課程、簽證或大學政策的信息，請以對應機構公佈的內容爲準。"
+        },
+        {
+          "zh": "活动与商家信息",
+          "en": "Events and partner information",
+          "hant": "活動與商家信息"
+        },
+        {
+          "zh": "活动时间、地点、报名名额和商家优惠可能调整。参加活动或使用优惠前，请查看原文链接、报名页面及商家公布的最新条件。赞助或合作展示不构成对商家所有产品与服务的保证。",
+          "en": "Event times, locations, availability and partner offers may change. Before attending or using an offer, check the linked announcement, registration page and merchant’s current conditions. Sponsorship or partnership listings do not guarantee every product or service offered by a partner.",
+          "hant": "活動時間、地點、報名名額和商家優惠可能調整。參加活動或使用優惠前，請查看原文鏈接、報名頁面及商家公佈的最新條件。贊助或合作展示不構成對商家所有產品與服務的保證。"
+        },
+        {
+          "zh": "外部链接与内容使用",
+          "en": "External links and use of content",
+          "hant": "外部鏈接與內容使用"
+        },
+        {
+          "zh": "外部网站由相应平台或机构运营。请自行查看其使用条款与隐私说明。本站标志、人物照片及文章的相关权利属于各自权利人；转载或使用前，请通过页脚联系方式确认授权。发现错误或失效链接，也欢迎联系我们更正。",
+          "en": "External websites are operated by their respective platforms or organisations; consult their terms and privacy notices. Rights in logos, portraits and articles belong to the respective rights holders. Contact us before reproducing content, or to report an error or broken link.",
+          "hant": "外部網站由相應平臺或機構運營。請自行查看其使用條款與隱私說明。本站標誌、人物照片及文章的相關權利屬於各自權利人；轉載或使用前，請通過頁腳聯繫方式確認授權。發現錯誤或失效鏈接，也歡迎聯繫我們更正。"
+        }
+      ]
+    },
+    "privacy": {
+      "title": {
+        "zh": "隐私声明",
+        "en": "Privacy",
+        "hant": "隱私聲明"
+      },
+      "paragraphs": [
+        {
+          "zh": "浏览与本机偏好",
+          "en": "Browsing and local preferences",
+          "hant": "瀏覽與本機偏好"
+        },
+        {
+          "zh": "浏览公开页面无需注册账号。你选择的语言可保存在当前浏览器的本机存储中；开场动画的播放记录保存在当前会话中。“您的隐私设置”页面可控制偏好保存、开场动画及自动动态效果，并可清除这些本机记录。",
+          "en": "No account is needed to browse public pages. Your language selection may be saved in this browser’s local storage; the intro playback record is kept for the current session. The Privacy settings page controls preference storage, the intro and automatic motion, and lets you clear these local records.",
+          "hant": "瀏覽公開頁面無需註冊賬號。你選擇的語言可保存在當前瀏覽器的本機存儲中；開場動畫的播放記錄保存在當前會話中。“您的隱私設置”頁面可控制偏好保存、開場動畫及自動動態效果，並可清除這些本機記錄。"
+        },
+        {
+          "zh": "后台登录与主动联系",
+          "en": "Administrator sessions and contacting us",
+          "hant": "後臺登錄與主動聯繫"
+        },
+        {
+          "zh": "后台使用必要的登录会话 Cookie 验证管理员身份和保护修改操作。通过邮箱或社交平台主动联系时，你发送的姓名、账号、联系方式和消息内容会由相应邮件或社交服务处理。请勿通过公开反馈发送密码、证件号码等敏感资料。",
+          "en": "The administration area uses an essential session cookie to authenticate administrators and protect editing actions. If you contact us by email or social media, that provider processes the name, account, contact details and message you choose to send. Please do not send passwords or identity document numbers in public feedback.",
+          "hant": "後臺使用必要的登錄會話 Cookie 驗證管理員身份和保護修改操作。通過郵箱或社交平臺主動聯繫時，你發送的姓名、賬號、聯繫方式和消息內容會由相應郵件或社交服務處理。請勿通過公開反饋發送密碼、證件號碼等敏感資料。"
+        },
+        {
+          "zh": "外部服务与翻译",
+          "en": "External services and translation",
+          "hant": "外部服務與翻譯"
+        },
+        {
+          "zh": "本站默认不安装广告或访问分析追踪器。点击外部文章、报名或社交链接后，信息处理由目标平台的规则决定。网站编辑人员使用自动英文翻译时，待翻译的公开文案会发送至所配置的翻译服务；普通访客的浏览行为不会用于该翻译请求。繁体中文在服务器本地转换。",
+          "en": "No advertising or analytics trackers are installed by default. When you follow article, registration or social links, the destination platform’s rules apply. If editors use automatic English translation, the public copy being translated is sent to the configured translation service; visitor browsing activity is not part of this request. Traditional Chinese is converted locally on the server.",
+          "hant": "本站默認不安裝廣告或訪問分析追蹤器。點擊外部文章、報名或社交鏈接後，信息處理由目標平臺的規則決定。網站編輯人員使用自動英文翻譯時，待翻譯的公開文案會發送至所配置的翻譯服務；普通訪客的瀏覽行爲不會用於該翻譯請求。繁體中文在服務器本地轉換。"
+        },
+        {
+          "zh": "查询、更正与更新",
+          "en": "Questions, corrections and updates",
+          "hant": "查詢、更正與更新"
+        },
+        {
+          "zh": "如需查询或更正你主动提供给学生会的信息，请通过页脚技术支持邮箱联系，并说明所涉及的事项。本说明对应当前网站功能；新增表单、分析工具或其他服务时，应同步更新说明。服务器运营所需的日志及备份由实际托管服务处理。",
+          "en": "To ask about or correct information you have provided to MCSA, contact the technical support email below and describe the matter. This notice covers the current website features and should be updated if forms, analytics or other services are introduced. Operational server logs and backups are handled by the actual hosting service.",
+          "hant": "如需查詢或更正你主動提供給學生會的信息，請通過頁腳技術支持郵箱聯繫，並說明所涉及的事項。本說明對應當前網站功能；新增表單、分析工具或其他服務時，應同步更新說明。服務器運營所需的日誌及備份由實際託管服務處理。"
+        }
+      ]
+    },
+    "accessibility": {
+      "title": {
+        "zh": "无障碍",
+        "en": "Accessibility",
+        "hant": "無障礙"
+      },
+      "paragraphs": [
+        {
+          "zh": "使用键盘浏览",
+          "en": "Keyboard navigation",
+          "hant": "使用鍵盤瀏覽"
+        },
+        {
+          "zh": "按 Tab 可依次访问导航、语言选择、卡片与按钮，焦点会显示清晰边框。页面开头设有“跳到正文”入口。主席团轮播支持左右方向键；部门列表可用 Tab 选择部门、用上下方向键滚动，按 Enter 或空格查看详情。",
+          "en": "Use Tab to reach navigation, language controls, cards and buttons; a visible outline marks focus. A Skip to content link appears at the start of the page. The presidium carousel supports left and right arrow keys. In the department list, use Tab to select a department, arrow keys to scroll, and Enter or Space to show details.",
+          "hant": "按 Tab 可依次訪問導航、語言選擇、卡片與按鈕，焦點會顯示清晰邊框。頁面開頭設有“跳到正文”入口。主席團輪播支持左右方向鍵；部門列表可用 Tab 選擇部門、用上下方向鍵滾動，按 Enter 或空格查看詳情。"
+        },
+        {
+          "zh": "文字、设备与动态效果",
+          "en": "Text, devices and motion",
+          "hant": "文字、設備與動態效果"
+        },
+        {
+          "zh": "网站支持浏览器缩放，并针对电脑、平板和手机调整排版。开启系统“减少动态效果”，或在隐私设置中关闭自动动态效果后，自动轮播与部门自动滚动会停止，仍可手动操作。每个页面也提供返回顶部按钮。",
+          "en": "The website supports browser zoom and adapts to desktop, tablet and mobile screens. With reduced motion enabled in your system, or automatic motion disabled in Privacy settings, autoplay and automatic department scrolling stop while manual controls remain available. Every page also has a back-to-top button.",
+          "hant": "網站支持瀏覽器縮放，並針對電腦、平板和手機調整排版。開啓系統“減少動態效果”，或在隱私設置中關閉自動動態效果後，自動輪播與部門自動滾動會停止，仍可手動操作。每個頁面也提供返回頂部按鈕。"
+        },
+        {
+          "zh": "遇到使用障碍时",
+          "en": "If you encounter a barrier",
+          "hant": "遇到使用障礙時"
+        },
+        {
+          "zh": "如果图片说明、颜色对比、键盘操作或页面布局影响你的使用，请通过“网站反馈”联系我们，告知页面地址、设备及遇到的问题。我们会根据反馈改进，也欢迎提出更适合你的信息获取方式。",
+          "en": "If image descriptions, contrast, keyboard controls or layout create a barrier, contact us through Website feedback with the page address, your device and the issue. We welcome suggestions for more accessible ways to provide information.",
+          "hant": "如果圖片說明、顏色對比、鍵盤操作或頁面佈局影響你的使用，請通過“網站反饋”聯繫我們，告知頁面地址、設備及遇到的問題。我們會根據反饋改進，也歡迎提出更適合你的信息獲取方式。"
+        }
+      ]
+    },
+    "feedback": {
+      "title": {
+        "zh": "网站反馈",
+        "en": "Website feedback",
+        "hant": "網站反饋"
+      },
+      "paragraphs": [
+        {
+          "zh": "告诉我们哪里可以做得更好",
+          "en": "Help us improve",
+          "hant": "告訴我們哪裏可以做得更好"
+        },
+        {
+          "zh": "欢迎反馈页面错误、失效链接、图片显示、无障碍体验或内容更正建议。请尽量提供页面地址、问题发生的大致时间、设备与浏览器，以及你原本希望完成的操作。必要时可附截图，并先遮盖个人信息。",
+          "en": "Please report page errors, broken links, image problems, accessibility issues or suggested corrections. Include the page address, approximate time, device and browser, and what you were trying to do. A screenshot can help; conceal personal information first.",
+          "hant": "歡迎反饋頁面錯誤、失效鏈接、圖片顯示、無障礙體驗或內容更正建議。請儘量提供頁面地址、問題發生的大致時間、設備與瀏覽器，以及你原本希望完成的操作。必要時可附截圖，並先遮蓋個人信息。"
+        },
+        {
+          "zh": "如何发送反馈",
+          "en": "How to send feedback",
+          "hant": "如何發送反饋"
+        },
+        {
+          "zh": "点击下方“发送网站反馈”会打开你设备上的邮件应用。你可以检查、修改邮件内容后自行发送。网站不会在你点击按钮时自动发送邮件。如果设备没有邮件应用，也可复制页脚技术支持邮箱，使用自己的邮箱发送。",
+          "en": "The Send website feedback button below opens your device’s email application. Review and edit the message before sending it yourself. Clicking the button does not automatically send an email. If no mail app is configured, copy the technical support address in the footer and use your preferred email service.",
+          "hant": "點擊下方“發送網站反饋”會打開你設備上的郵件應用。你可以檢查、修改郵件內容後自行發送。網站不會在你點擊按鈕時自動發送郵件。如果設備沒有郵件應用，也可複製頁腳技術支持郵箱，使用自己的郵箱發送。"
+        },
+        {
+          "zh": "反馈内容的范围",
+          "en": "What to include",
+          "hant": "反饋內容的範圍"
+        },
+        {
+          "zh": "请勿在反馈中填写密码、支付信息或证件号码。活动报名、会员事务或合作咨询，可使用页脚列出的学生会社交平台联系相应团队。",
+          "en": "Do not include passwords, payment details or identity document numbers. For event registration, membership or partnership enquiries, contact the relevant team through the association’s social channels listed below.",
+          "hant": "請勿在反饋中填寫密碼、支付信息或證件號碼。活動報名、會員事務或合作諮詢，可使用頁腳列出的學生會社交平臺聯繫相應團隊。"
+        }
+      ]
+    },
+    "privacy-settings": {
+      "title": {
+        "zh": "您的隐私设置",
+        "en": "Privacy settings",
+        "hant": "您的隱私設置"
+      },
+      "paragraphs": [
+        {
+          "zh": "管理这个浏览器的偏好",
+          "en": "Manage this browser’s preferences",
+          "hant": "管理這個瀏覽器的偏好"
+        },
+        {
+          "zh": "以下选项只影响当前浏览器，不会修改其他访客的设置。网站没有可供开启的广告或分析 Cookie；后台必要的身份验证会话不受这些选项影响。",
+          "en": "These options affect this browser only, not other visitors. There are no advertising or analytics cookies to enable. Essential administrator authentication sessions are unaffected.",
+          "hant": "以下選項隻影響當前瀏覽器，不會修改其他訪客的設置。網站沒有可供開啓的廣告或分析 Cookie；後臺必要的身份驗證會話不受這些選項影響。"
+        },
+        {
+          "zh": "保存语言与显示偏好",
+          "en": "Remembering language and display preferences",
+          "hant": "保存語言與顯示偏好"
+        },
+        {
+          "zh": "允许保存时，网站记住语言、开场动画及自动动态效果选择；关闭后，选择仅在当前页面生效。“清除本机偏好”会移除网站保存的这些选择及动画播放记录，不会删除网站内容或后台数据库。",
+          "en": "When storage is allowed, the website remembers your language, intro and automatic-motion choices. When disabled, choices apply to the current page only. Clear local preferences removes these choices and the intro playback record; it does not delete website content or the administration database.",
+          "hant": "允許保存時，網站記住語言、開場動畫及自動動態效果選擇；關閉後，選擇僅在當前頁面生效。“清除本機偏好”會移除網站保存的這些選擇及動畫播放記錄，不會刪除網站內容或後臺數據庫。"
+        }
+      ]
+    }
+  },
+  "departments": [
+    {
+      "id": "organisation",
+      "name": {
+        "zh": "组织部",
+        "en": "Organisation Department",
+        "hant": "組織部"
+      },
+      "intro": {
+        "zh": "MCSA 活动的策划组织部门，负责活动策划到执行的全过程。",
+        "en": "The Organisation Department plans and runs MCSA events from start to finish.",
+        "hant": "MCSA 活動的策劃組織部門，負責活動策劃到執行的全過程。"
+      },
+      "recruitment": {
+        "zh": "招新开放后，我们会在 Instagram、微信和小红书发布申请表与面试安排。",
+        "en": "When recruitment opens, we will publish application forms and interview details on Instagram, WeChat and Xiaohongshu.",
+        "hant": "招新開放後，我們會在 Instagram、微信和小紅書發佈申請表與面試安排。"
+      },
+      "url": "",
+      "image": "",
+      "keywords": {
+        "zh": "活动策划｜现场执行｜团队协作",
+        "en": "Event planning|Event delivery|Teamwork",
+        "hant": "活動策劃｜現場執行｜團隊協作"
+      }
+    },
+    {
+      "id": "publicity",
+      "name": {
+        "zh": "宣传部",
+        "en": "Publicity Department",
+        "hant": "宣傳部"
+      },
+      "intro": {
+        "zh": "管理学生会官方社交媒体，负责攻略、宣传与资讯发布。",
+        "en": "Managing official social media channels, guides, promotion and student information.",
+        "hant": "管理學生會官方社交媒體，負責攻略、宣傳與資訊發佈。"
+      },
+      "recruitment": {
+        "zh": "招新开放后，我们会在 Instagram、微信和小红书发布申请表与面试安排。",
+        "en": "When recruitment opens, we will publish application forms and interview details on Instagram, WeChat and Xiaohongshu.",
+        "hant": "招新開放後，我們會在 Instagram、微信和小紅書發佈申請表與面試安排。"
+      },
+      "url": "",
+      "image": "",
+      "keywords": {
+        "zh": "内容创作｜媒体运营｜视觉设计",
+        "en": "Content creation|Social media|Visual design",
+        "hant": "內容創作｜媒體運營｜視覺設計"
+      }
+    },
+    {
+      "id": "marketing",
+      "name": {
+        "zh": "市场部",
+        "en": "Marketing Department",
+        "hant": "市場部"
+      },
+      "intro": {
+        "zh": "负责赞助商、折扣商家、战略合作伙伴以及校外活动合作。",
+        "en": "Handling sponsors, discount merchants, partners and off-campus collaborations.",
+        "hant": "負責贊助商、折扣商家、戰略合作伙伴以及校外活動合作。"
+      },
+      "recruitment": {
+        "zh": "招新开放后，我们会在 Instagram、微信和小红书发布申请表与面试安排。",
+        "en": "When recruitment opens, we will publish application forms and interview details on Instagram, WeChat and Xiaohongshu.",
+        "hant": "招新開放後，我們會在 Instagram、微信和小紅書發佈申請表與面試安排。"
+      },
+      "url": "",
+      "image": "",
+      "keywords": {
+        "zh": "商家合作｜赞助洽谈｜资源拓展",
+        "en": "Business partnerships|Sponsorship|Outreach",
+        "hant": "商家合作｜贊助洽談｜資源拓展"
+      }
+    },
+    {
+      "id": "secretariat",
+      "name": {
+        "zh": "秘书部",
+        "en": "Secretariat",
+        "hant": "祕書部"
+      },
+      "intro": {
+        "zh": "负责上传下达、统筹分配、群组管理、会议记录与档案整理。",
+        "en": "Coordinating communication, group management, meeting minutes and archives.",
+        "hant": "負責上傳下達、統籌分配、羣組管理、會議記錄與檔案整理。"
+      },
+      "recruitment": {
+        "zh": "招新开放后，我们会在 Instagram、微信和小红书发布申请表与面试安排。",
+        "en": "When recruitment opens, we will publish application forms and interview details on Instagram, WeChat and Xiaohongshu.",
+        "hant": "招新開放後，我們會在 Instagram、微信和小紅書發佈申請表與面試安排。"
+      },
+      "url": "",
+      "image": "",
+      "keywords": {
+        "zh": "内部协调｜文档管理｜会议记录",
+        "en": "Coordination|Documentation|Meeting records",
+        "hant": "內部協調｜文檔管理｜會議記錄"
+      }
+    },
+    {
+      "id": "alumni",
+      "name": {
+        "zh": "校友会",
+        "en": "Alumni Association",
+        "hant": "校友會"
+      },
+      "intro": {
+        "zh": "连接在校生与全球校友，促进资源共享与经验传承。",
+        "en": "Connecting current students with alumni worldwide through networking and mentorship.",
+        "hant": "連接在校生與全球校友，促進資源共享與經驗傳承。"
+      },
+      "recruitment": {
+        "zh": "招新开放后，我们会在 Instagram、微信和小红书发布申请表与面试安排。",
+        "en": "When recruitment opens, we will publish application forms and interview details on Instagram, WeChat and Xiaohongshu.",
+        "hant": "招新開放後，我們會在 Instagram、微信和小紅書發佈申請表與面試安排。"
+      },
+      "url": "",
+      "image": "",
+      "keywords": {
+        "zh": "校友网络｜资源共享｜经验传承",
+        "en": "Alumni network|Shared resources|Mentorship",
+        "hant": "校友網絡｜資源共享｜經驗傳承"
+      }
+    },
+    {
+      "id": "sports-culture",
+      "name": {
+        "zh": "文体部",
+        "en": "Sports & Culture Department",
+        "hant": "文體部"
+      },
+      "intro": {
+        "zh": "专注于 MCSA 文艺演出、体育活动和校园文化体验。",
+        "en": "Focused on performances, sports events and cultural experiences.",
+        "hant": "專注於 MCSA 文藝演出、體育活動和校園文化體驗。"
+      },
+      "recruitment": {
+        "zh": "招新开放后，我们会在 Instagram、微信和小红书发布申请表与面试安排。",
+        "en": "When recruitment opens, we will publish application forms and interview details on Instagram, WeChat and Xiaohongshu.",
+        "hant": "招新開放後，我們會在 Instagram、微信和小紅書發佈申請表與面試安排。"
+      },
+      "url": "",
+      "image": "",
+      "keywords": {
+        "zh": "文艺演出｜体育活动｜文化体验",
+        "en": "Performances|Sport|Cultural experiences",
+        "hant": "文藝演出｜體育活動｜文化體驗"
+      }
+    }
+  ],
+  "team": [
+    {
+      "name": {
+        "zh": "潘玥",
+        "en": "Pan Yue",
+        "hant": "潘玥"
+      },
+      "role": {
+        "zh": "主席",
+        "en": "President",
+        "hant": "主席"
+      },
+      "description": {
+        "zh": "负责主席团整体统筹、学生会战略方向、对外形象与核心决策，带领团队推进 MCSA 的活动、服务与社区建设。",
+        "en": "Leading the overall direction of the presidium, strategic planning, external image and key decisions for MCSA.",
+        "hant": "負責主席團整體統籌、學生會戰略方向、對外形象與核心決策，帶領團隊推進 MCSA 的活動、服務與社區建設。"
+      },
+      "image": "images/president-pan-yue.jpg",
+      "tags": [],
+      "url": ""
+    },
+    {
+      "name": {
+        "zh": "盛一禾",
+        "en": "Sheng Yihe",
+        "hant": "盛一禾"
+      },
+      "role": {
+        "zh": "对外副主席",
+        "en": "Vice President External",
+        "hant": "對外副主席"
+      },
+      "description": {
+        "zh": "负责对外合作、品牌沟通、资源连接与合作伙伴关系维护，帮助 MCSA 拓展更高质量的外部支持与机会。",
+        "en": "Responsible for external partnerships, brand communication, resource connection and partner relations.",
+        "hant": "負責對外合作、品牌溝通、資源連接與合作伙伴關係維護，幫助 MCSA 拓展更高質量的外部支持與機會。"
+      },
+      "image": "images/president-sheng-yihe.png",
+      "tags": [],
+      "url": ""
+    },
+    {
+      "name": {
+        "zh": "黄希诺",
+        "en": "Huang Xinuo",
+        "hant": "黃希諾"
+      },
+      "role": {
+        "zh": "对内副主席",
+        "en": "Vice President Internal",
+        "hant": "對內副主席"
+      },
+      "description": {
+        "zh": "负责内部管理、部门协调、团队建设与组织效率提升，保障学生会各部门稳定、高效地协作运行。",
+        "en": "Responsible for internal management, department coordination, team building and organisational efficiency.",
+        "hant": "負責內部管理、部門協調、團隊建設與組織效率提升，保障學生會各部門穩定、高效地協作運行。"
+      },
+      "image": "images/president-huang-xinuo.jpg",
+      "tags": [],
+      "url": ""
+    }
+  ],
+  "posts": [
+    {
+      "id": "event-1",
+      "page": "latest-events",
+      "title": {
+        "zh": "迎新活动",
+        "en": "Orientation",
+        "hant": "迎新活動"
+      },
+      "text": {
+        "zh": "帮助新同学快速熟悉校园、认识朋友、融入 Monash 生活。",
+        "en": "Helping new students settle in, meet friends and get familiar with Monash life.",
+        "hant": "幫助新同學快速熟悉校園、認識朋友、融入 Monash 生活。"
+      },
+      "image": "",
+      "url": "",
+      "published": false,
+      "date": "",
+      "crop": null
+    },
+    {
+      "id": "event-2",
+      "page": "latest-events",
+      "title": {
+        "zh": "节日庆祝",
+        "en": "Festival Events",
+        "hant": "節日慶祝"
+      },
+      "text": {
+        "zh": "中秋、春节等文化活动，连接校园与华人文化。",
+        "en": "Celebrating cultural festivals such as Mid-Autumn Festival and Lunar New Year.",
+        "hant": "中秋、春節等文化活動，連接校園與華人文化。"
+      },
+      "image": "",
+      "url": "",
+      "published": false,
+      "date": "",
+      "crop": null
+    },
+    {
+      "id": "event-3",
+      "page": "latest-events",
+      "title": {
+        "zh": "职业分享",
+        "en": "Career Sharing",
+        "hant": "職業分享"
+      },
+      "text": {
+        "zh": "邀请学长学姐和行业嘉宾分享实习、求职与发展经验。",
+        "en": "Inviting alumni and industry guests to share internship and career insights.",
+        "hant": "邀請學長學姐和行業嘉賓分享實習、求職與發展經驗。"
+      },
+      "image": "",
+      "url": "",
+      "published": false,
+      "date": "",
+      "crop": null
+    }
+  ],
+  "shortcuts": [],
+  "socials": [
+    {
+      "id": "wechat",
+      "name": {
+        "zh": "微信公众号",
+        "en": "WeChat",
+        "hant": "微信公衆號"
+      },
+      "account": "MONASH中国学生会",
+      "url": "",
+      "image": "images/social-reference.png",
+      "crop": [
+        316,
+        127,
+        333,
+        333,
+        2048,
+        770
+      ],
+      "placement": "qr"
+    },
+    {
+      "id": "mini",
+      "name": {
+        "zh": "微信小程序",
+        "en": "WeChat mini program",
+        "hant": "微信小程序"
+      },
+      "account": "MCSA",
+      "url": "",
+      "image": "images/social-reference.png",
+      "crop": [
+        693,
+        127,
+        333,
+        333,
+        2048,
+        770
+      ],
+      "placement": "qr"
+    },
+    {
+      "id": "xhs",
+      "name": {
+        "zh": "小红书",
+        "en": "Xiaohongshu",
+        "hant": "小紅書"
+      },
+      "account": "MONASH中国学生会",
+      "url": "",
+      "image": "",
+      "crop": null,
+      "placement": "qr"
+    },
+    {
+      "id": "instagram",
+      "name": {
+        "zh": "Instagram",
+        "en": "Instagram",
+        "hant": "Instagram"
+      },
+      "account": "monashcsa",
+      "url": "https://www.instagram.com/monashcsa/",
+      "image": "images/instagram-qr.png",
+      "crop": null,
+      "placement": "qr"
+    },
+    {
+      "id": "facebook",
+      "name": {
+        "zh": "Facebook",
+        "en": "Facebook",
+        "hant": "Facebook"
+      },
+      "account": "@monashcsa",
+      "url": "https://www.facebook.com/monashcsa",
+      "image": "",
+      "crop": null,
+      "placement": "account"
+    },
+    {
+      "id": "douyin",
+      "name": {
+        "zh": "抖音",
+        "en": "Douyin",
+        "hant": "抖音"
+      },
+      "account": "Monash_CSSA",
+      "url": "",
+      "image": "images/social-reference.png",
+      "crop": [
+        1069,
+        127,
+        333,
+        333,
+        2048,
+        770
+      ],
+      "placement": "hidden"
+    },
+    {
+      "id": "weibo",
+      "name": {
+        "zh": "微博",
+        "en": "Weibo",
+        "hant": "微博"
+      },
+      "account": "MCSA官方微博",
+      "url": "",
+      "image": "images/social-reference.png",
+      "crop": [
+        1445,
+        127,
+        333,
+        333,
+        2048,
+        770
+      ],
+      "placement": "hidden"
+    }
+  ],
+  "settings": {
+    "logo": "images/logo.png",
+    "opening": "images/opening.gif",
+    "openingDuration": 5600,
+    "footer": {
+      "zh": "© 2026 蒙纳士中国学生会。保留所有权利。",
+      "en": "© 2026 Monash Chinese Students Association. All rights reserved.",
+      "hant": "© 2026 蒙納士中國學生會。保留所有權利。"
+    },
+    "email": "monashcsait@gmail.com",
+    "heroBlurb": {
+      "zh": "让远行多一份陪伴，让青春留下共同的回响。",
+      "en": "A familiar presence far from home. Shared moments that stay with you.",
+      "hant": "讓遠行多一份陪伴，讓青春留下共同的迴響。"
+    },
+    "heroLogo": "images/hero-logo.png",
+    "departmentOverview": {
+      "zh": "蒙纳士中国学生会下设组织部、宣传部、市场部、秘书部、校友会、文体部六大部门。从活动策划、宣传推广，到资源拓展与内部协调，六个团队各展所长，共同支持学生会的日常运作。",
+      "en": "MCSA brings together six departments: Organisation, Publicity, Marketing, Secretariat, Alumni, and Sports & Culture. Each team contributes its strengths, from events and communications to partnerships and coordination, supporting the association together.",
+      "hant": "蒙納士中國學生會下設組織部、宣傳部、市場部、祕書部、校友會、文體部六大部門。從活動策劃、宣傳推廣，到資源拓展與內部協調，六個團隊各展所長，共同支持學生會的日常運作。"
+    },
+    "departmentHint": {
+      "zh": "六个部门，同一份热忱。点击右侧部门，了解各自的工作与招新信息。",
+      "en": "Six departments, one shared commitment. Select a department to explore its work and recruitment information.",
+      "hant": "六個部門，同一份熱忱。點擊右側部門，瞭解各自的工作與招新信息。"
+    },
+    "departmentOverviewTitle": {
+      "zh": "一起，让想法发生",
+      "en": "Making ideas happen, together",
+      "hant": "一起，讓想法發生"
+    },
+    "departmentOverviewTags": {
+      "zh": "六大部门｜协作同行｜服务同学",
+      "en": "Six teams|Working together|Supporting students",
+      "hant": "六大部門｜協作同行｜服務同學"
+    },
+    "departmentButton": {
+      "zh": "查看{name}详情",
+      "en": "Explore {name}",
+      "hant": "查看{name}詳情"
+    },
+    "departmentReset": {
+      "zh": "查看学生会概览",
+      "en": "Association overview",
+      "hant": "查看學生會概覽"
+    }
+  },
+  "schemaVersion": 4,
+  "terms": [],
+  "merchants": [],
+  "sponsors": [],
+  "regions": [
+    {
+      "id": "clayton",
+      "name": {
+        "zh": "克莱顿",
+        "en": "Clayton",
+        "hant": "克萊頓"
+      }
+    },
+    {
+      "id": "city",
+      "name": {
+        "zh": "市中心",
+        "en": "City",
+        "hant": "市中心"
+      }
+    },
+    {
+      "id": "caulfield",
+      "name": {
+        "zh": "考菲尔德",
+        "en": "Caulfield",
+        "hant": "考菲爾德"
+      }
+    },
+    {
+      "id": "glen",
+      "name": {
+        "zh": "格伦",
+        "en": "Glen",
+        "hant": "格倫"
+      }
+    },
+    {
+      "id": "other",
+      "name": {
+        "zh": "其他地区",
+        "en": "Other areas",
+        "hant": "其他地區"
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": "food",
+      "name": {
+        "zh": "餐馆",
+        "en": "Restaurants",
+        "hant": "餐館"
+      }
+    },
+    {
+      "id": "drink",
+      "name": {
+        "zh": "饮品",
+        "en": "Drinks",
+        "hant": "飲品"
+      }
+    },
+    {
+      "id": "fun",
+      "name": {
+        "zh": "娱乐",
+        "en": "Entertainment",
+        "hant": "娛樂"
+      }
+    },
+    {
+      "id": "life",
+      "name": {
+        "zh": "生活",
+        "en": "Everyday living",
+        "hant": "生活"
+      }
+    }
+  ],
+  "footerLinks": [
+    {
+      "id": "disclaimer",
+      "name": {
+        "zh": "免责声明",
+        "en": "Disclaimer",
+        "hant": "免責聲明"
+      },
+      "url": "disclaimer.html"
+    },
+    {
+      "id": "privacy",
+      "name": {
+        "zh": "隐私声明",
+        "en": "Privacy",
+        "hant": "隱私聲明"
+      },
+      "url": "privacy.html"
+    },
+    {
+      "id": "accessibility",
+      "name": {
+        "zh": "无障碍",
+        "en": "Accessibility",
+        "hant": "無障礙"
+      },
+      "url": "accessibility.html"
+    },
+    {
+      "id": "feedback",
+      "name": {
+        "zh": "网站反馈",
+        "en": "Website feedback",
+        "hant": "網站反饋"
+      },
+      "url": "feedback.html"
+    },
+    {
+      "id": "privacy-settings",
+      "name": {
+        "zh": "您的隐私设置",
+        "en": "Privacy settings",
+        "hant": "您的隱私設置"
+      },
+      "url": "privacy-settings.html"
+    }
+  ],
+  "layout": {
+    "contentWidth": 1240,
+    "baseFontSize": 16,
+    "sectionSpacing": 72,
+    "cardRadius": 30,
+    "primaryColor": "#c51930",
+    "backgroundColor": "#fff1f3",
+    "heroCardWidth": 440,
+    "heroSlope": 48,
+    "presidentImageShare": 46,
+    "presidentHeight": 500,
+    "departmentHeight": 480,
+    "departmentSpeed": 18,
+    "contactQrSize": 112,
+    "contactColumns": 4,
+    "carouselSeconds": 6,
+    "departmentDirection": "up",
+    "departmentAutoplay": true
+  },
+  "homeSections": [
+    {
+      "id": "hero",
+      "name": {
+        "zh": "首页主视觉",
+        "en": "Hero",
+        "hant": "首頁主視覺"
+      },
+      "visible": true
+    },
+    {
+      "id": "about",
+      "name": {
+        "zh": "关于我们",
+        "en": "About",
+        "hant": "關於我們"
+      },
+      "visible": true
+    },
+    {
+      "id": "events",
+      "name": {
+        "zh": "最新活动",
+        "en": "Events",
+        "hant": "最新活動"
+      },
+      "visible": true
+    },
+    {
+      "id": "presidents",
+      "name": {
+        "zh": "现任主席团",
+        "en": "Presidium",
+        "hant": "現任主席團"
+      },
+      "visible": true
+    },
+    {
+      "id": "departments",
+      "name": {
+        "zh": "部门介绍",
+        "en": "Departments",
+        "hant": "部門介紹"
+      },
+      "visible": true
+    }
+  ],
+  "interfaceText": {
+    "首页": {
+      "zh": "首页",
+      "en": "Home",
+      "hant": "首頁"
+    },
+    "中文": {
+      "zh": "中文",
+      "en": "Chinese",
+      "hant": "中文"
+    },
+    "英语": {
+      "zh": "英语",
+      "en": "English",
+      "hant": "英語"
+    },
+    "蒙纳士中国学生会": {
+      "zh": "蒙纳士中国学生会",
+      "en": "MCSA · OUR TEAMS",
+      "hant": "蒙納士中國學生會"
+    },
+    "菜单": {
+      "zh": "菜单",
+      "en": "Menu",
+      "hant": "菜單"
+    },
+    "主导航": {
+      "zh": "主导航",
+      "en": "Main navigation",
+      "hant": "主導航"
+    },
+    "部门招新": {
+      "zh": "部门招新",
+      "en": "Recruitment",
+      "hant": "部門招新"
+    },
+    "切换语言": {
+      "zh": "切换语言",
+      "en": "Change language",
+      "hant": "切換語言"
+    },
+    "翻译处理中": {
+      "zh": "翻译处理中",
+      "en": "Translation pending",
+      "hant": "翻譯處理中"
+    },
+    "阅读详情": {
+      "zh": "阅读详情",
+      "en": "Read more",
+      "hant": "閱讀詳情"
+    },
+    "内容将陆续更新，敬请期待。": {
+      "zh": "内容将陆续更新，敬请期待。",
+      "en": "Updates will appear here soon.",
+      "hant": "內容將陸續更新，敬請期待。"
+    },
+    "现任主席团": {
+      "zh": "现任主席团",
+      "en": "Current presidium",
+      "hant": "現任主席團"
+    },
+    "MCSA 现任主席团": {
+      "zh": "MCSA 现任主席团",
+      "en": "Current MCSA Presidium",
+      "hant": "MCSA 現任主席團"
+    },
+    "上一张": {
+      "zh": "上一张",
+      "en": "Previous",
+      "hant": "上一張"
+    },
+    "下一张": {
+      "zh": "下一张",
+      "en": "Next",
+      "hant": "下一張"
+    },
+    "播放": {
+      "zh": "播放",
+      "en": "Play",
+      "hant": "播放"
+    },
+    "暂停": {
+      "zh": "暂停",
+      "en": "Pause",
+      "hant": "暫停"
+    },
+    "第": {
+      "zh": "第",
+      "en": "Slide",
+      "hant": "第"
+    },
+    "前往主页": {
+      "zh": "前往主页",
+      "en": "Visit profile",
+      "hant": "前往主頁"
+    },
+    "技术支持": {
+      "zh": "技术支持",
+      "en": "Technical support",
+      "hant": "技術支持"
+    },
+    "欢迎来到 MCSA": {
+      "zh": "欢迎来到 MCSA",
+      "en": "WELCOME TO MCSA",
+      "hant": "歡迎來到 MCSA"
+    },
+    "了解我们": {
+      "zh": "了解我们",
+      "en": "About us",
+      "hant": "瞭解我們"
+    },
+    "查看活动": {
+      "zh": "查看活动",
+      "en": "Explore events",
+      "hant": "查看活動"
+    },
+    "部门介绍": {
+      "zh": "部门介绍",
+      "en": "Departments",
+      "hant": "部門介紹"
+    },
+    "最新三个活动": {
+      "zh": "最新三个活动",
+      "en": "Three latest events",
+      "hant": "最新三個活動"
+    },
+    "上一个活动": {
+      "zh": "上一个活动",
+      "en": "Previous event",
+      "hant": "上一個活動"
+    },
+    "下一个活动": {
+      "zh": "下一个活动",
+      "en": "Next event",
+      "hant": "下一個活動"
+    },
+    "上一位": {
+      "zh": "上一位",
+      "en": "Previous member",
+      "hant": "上一位"
+    },
+    "下一位": {
+      "zh": "下一位",
+      "en": "Next member",
+      "hant": "下一位"
+    },
+    "地区": {
+      "zh": "地区",
+      "en": "Area",
+      "hant": "地區"
+    },
+    "全部地区": {
+      "zh": "全部地区",
+      "en": "All areas",
+      "hant": "全部地區"
+    },
+    "种类": {
+      "zh": "种类",
+      "en": "Category",
+      "hant": "種類"
+    },
+    "全部种类": {
+      "zh": "全部种类",
+      "en": "All categories",
+      "hant": "全部種類"
+    },
+    "暂无符合条件的商家。": {
+      "zh": "暂无符合条件的商家。",
+      "en": "No matching partners yet.",
+      "hant": "暫無符合條件的商家。"
+    },
+    "阅读原文": {
+      "zh": "阅读原文",
+      "en": "Read original",
+      "hant": "閱讀原文"
+    },
+    "这篇内容暂未发布。": {
+      "zh": "这篇内容暂未发布。",
+      "en": "This article is not available.",
+      "hant": "這篇內容暫未發佈。"
+    },
+    "所有活动": {
+      "zh": "所有活动",
+      "en": "All events",
+      "hant": "所有活動"
+    },
+    "清除本机偏好": {
+      "zh": "清除本机偏好",
+      "en": "Clear local preferences",
+      "hant": "清除本機偏好"
+    },
+    "内容管理": {
+      "zh": "内容管理",
+      "en": "Content management",
+      "hant": "內容管理"
+    },
+    "返回顶部": {
+      "zh": "返回顶部",
+      "en": "Back to top",
+      "hant": "返回頂部"
+    },
+    "跳到正文": {
+      "zh": "跳到正文",
+      "en": "Skip to content",
+      "hant": "跳到正文"
+    },
+    "切换语言会丢弃未保存修改，继续吗？": {
+      "zh": "切换语言会丢弃未保存修改，继续吗？",
+      "en": "Discard unsaved edits to change language?",
+      "hant": "切換語言會丟棄未保存修改，繼續嗎？"
+    },
+    "已清除。": {
+      "zh": "已清除。",
+      "en": "Preferences cleared.",
+      "hant": "已清除。"
+    },
+    "MCSA 开场动画": {
+      "zh": "MCSA 开场动画",
+      "en": "MCSA opening animation",
+      "hant": "MCSA 開場動畫"
+    },
+    "跳过动画": {
+      "zh": "跳过动画",
+      "en": "Skip intro",
+      "hant": "跳過動畫"
+    },
+    "网站反馈": {
+      "zh": "网站反馈",
+      "en": "Website feedback",
+      "hant": "網站反饋"
+    },
+    "发送网站反馈": {
+      "zh": "发送网站反馈",
+      "en": "Send website feedback",
+      "hant": "發送網站反饋"
+    },
+    "允许保存本机偏好": {
+      "zh": "允许保存本机偏好",
+      "en": "Remember preferences on this device",
+      "hant": "允許保存本機偏好"
+    },
+    "显示开场动画": {
+      "zh": "显示开场动画",
+      "en": "Show opening animation",
+      "hant": "顯示開場動畫"
+    },
+    "允许自动轮播和滚动": {
+      "zh": "允许自动轮播和滚动",
+      "en": "Allow automatic carousels and scrolling",
+      "hant": "允許自動輪播和滾動"
+    },
+    "保存偏好": {
+      "zh": "保存偏好",
+      "en": "Save preferences",
+      "hant": "保存偏好"
+    },
+    "偏好已保存。": {
+      "zh": "偏好已保存。",
+      "en": "Preferences saved.",
+      "hant": "偏好已保存。"
+    },
+    "已停止保存，当前选择仅在本页生效。": {
+      "zh": "已停止保存，当前选择仅在本页生效。",
+      "en": "Storage disabled. These choices apply to this page only.",
+      "hant": "已停止保存，當前選擇僅在本頁生效。"
+    },
+    "切换到成员": {
+      "zh": "切换到成员",
+      "en": "Go to member",
+      "hant": "切換到成員"
+    },
+    "部门详情": {
+      "zh": "部门详情",
+      "en": "DEPARTMENT DETAIL",
+      "hant": "部門詳情"
+    },
+    "部门列表，可拖动或滚动": {
+      "zh": "部门列表，可拖动或滚动",
+      "en": "Departments, drag or scroll",
+      "hant": "部門列表，可拖動或滾動"
+    },
+    "拖动列表，探索六个部门": {
+      "zh": "拖动列表，探索六个部门",
+      "en": "Drag to explore our teams",
+      "hant": "拖動列表，探索六個部門"
+    },
+    "暂停滚动": {
+      "zh": "暂停滚动",
+      "en": "Pause scrolling",
+      "hant": "暫停滾動"
+    },
+    "二维码待补充": {
+      "zh": "二维码待补充",
+      "en": "QR code coming soon",
+      "hant": "二維碼待補充"
+    },
+    "技术支持邮箱": {
+      "zh": "技术支持邮箱",
+      "en": "Technical support",
+      "hant": "技術支持郵箱"
+    },
+    "继续滚动": {
+      "zh": "继续滚动",
+      "en": "Resume scrolling",
+      "hant": "繼續滾動"
+    }
+  }
+}

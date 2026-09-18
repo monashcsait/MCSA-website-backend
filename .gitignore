@@ -1,0 +1,14 @@
+instance/
+instance-before-*/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+*.sqlite3*
+credentials.json
+*.pem
+*.key
+*.log
+.DS_Store
