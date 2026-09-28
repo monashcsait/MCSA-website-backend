@@ -332,6 +332,27 @@ def create_app(instance_path=None):
             "INSERT OR IGNORE INTO site VALUES (1,0,?)",
             (json.dumps(SEED, ensure_ascii=False),),
         )
+        users_table_exists = c.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'"
+        ).fetchone() is not None
+        c.execute(
+            """CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY,
+                username TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL CHECK(role IN ('super_admin', 'admin')),
+                permissions TEXT NOT NULL DEFAULT '[]',
+                active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0, 1)),
+                auth_version INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )"""
+        )
+        # Seed only during migration, so a deliberately removed account stays removed.
+        if not users_table_exists:
+            c.execute(
+                "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                ("admin", cred["password_hash"], "super_admin"),
+            )
     with conn() as connection:
         old_revision, old_json = connection.execute(
             "SELECT revision,data FROM site WHERE id=1"
