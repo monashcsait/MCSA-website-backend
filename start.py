@@ -2,7 +2,7 @@ from pathlib import Path
 import os, json, secrets, getpass, sys
 from werkzeug.security import generate_password_hash
 from waitress import serve
-from server import create_app
+from server import create_app, reset_admin_account
 
 root = Path(__file__).resolve().parent
 inst = Path(os.environ.get("MCSA_INSTANCE", str(root / "instance")))
@@ -18,10 +18,12 @@ if "--reset-password" in sys.argv or not f.exists():
         if len(password) >= 12 and password == confirm:
             break
         print("Passwords must match and contain at least 12 characters.")
+    password_hash = generate_password_hash(password)
+    reset_admin_account(inst, password_hash)
     f.write_text(
         json.dumps(
             {
-                "password_hash": generate_password_hash(password),
+                "password_hash": password_hash,
                 "secret": secrets.token_hex(32),
             }
         )

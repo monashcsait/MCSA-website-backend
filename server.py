@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from datetime import timedelta
+from contextlib import closing
 from functools import wraps
 from urllib.parse import urlsplit
 import copy
@@ -23,6 +24,7 @@ from flask import (
     send_file,
     abort,
     redirect,
+    g,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from PIL import Image, UnidentifiedImageError
@@ -292,6 +294,28 @@ def migrate(content):
     return content
 
 
+def reset_admin_account(instance_path, password_hash):
+    """Sync the local password-reset command with an existing users table."""
+    db = Path(instance_path) / "site.sqlite3"
+    if not db.exists():
+        return
+    with closing(sqlite3.connect(db, timeout=15)) as connection, connection:
+        exists = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'"
+        ).fetchone()
+        if not exists:
+            return
+        connection.execute(
+            """INSERT INTO users (username, password_hash, role) VALUES ('admin', ?, 'super_admin')
+            ON CONFLICT(username) DO UPDATE SET
+                password_hash=excluded.password_hash,
+                role='super_admin',
+                active=1,
+                auth_version=users.auth_version+1""",
+            (password_hash,),
+        )
+
+
 def create_app(instance_path=None):
     frontend_url, backend_url, allowed_origins = deployment_settings(ROOT)
     inst = Path(
@@ -386,15 +410,43 @@ def create_app(instance_path=None):
             r, d = c.execute("SELECT revision,data FROM site WHERE id=1").fetchone()
         return r, migrate(json.loads(d))
 
-    def guard(fn):
+    def current_user():
+        user_id = session.get("user_id")
+        auth_version = session.get("auth_version")
+        if type(user_id) is not int or type(auth_version) is not int:
+            if session:
+                session.clear()
+            return None
+        with closing(conn()) as c:
+            row = c.execute(
+                "SELECT id, username, role, active, auth_version FROM users WHERE id=?",
+                (user_id,),
+            ).fetchone()
+        if not row or row[3] != 1 or row[4] != auth_version:
+            session.clear()
+            return None
+        return {"id": row[0], "username": row[1], "role": row[2]}
+
+    def guard(fn=None, *, require_super_admin=True):
+        if fn is None:
+            return lambda protected: guard(
+                protected, require_super_admin=require_super_admin
+            )
+
         @wraps(fn)
         def wrap(*a, **kw):
-            if not session.get("admin"):
+            user = current_user()
+            if user is None:
                 return jsonify(error="login_required"), 401
-            if request.method not in ["GET", "HEAD"] and not secrets.compare_digest(
-                request.headers.get("X-CSRF-Token", ""), session.get("csrf", "-")
-            ):
-                return jsonify(error="csrf_failed"), 403
+            if require_super_admin and user["role"] != "super_admin":
+                return jsonify(error="forbidden"), 403
+            if request.method not in ["GET", "HEAD"]:
+                csrf = session.get("csrf")
+                if not isinstance(csrf, str) or not csrf or not secrets.compare_digest(
+                    request.headers.get("X-CSRF-Token", ""), csrf
+                ):
+                    return jsonify(error="csrf_failed"), 403
+            g.current_user = user
             return fn(*a, **kw)
 
         return wrap
@@ -433,9 +485,11 @@ def create_app(instance_path=None):
 
     @app.get("/api/session")
     def session_info():
+        user = current_user()
         return jsonify(
-            authenticated=bool(session.get("admin")),
-            csrf=session.get("csrf") if session.get("admin") else None,
+            authenticated=user is not None,
+            csrf=session.get("csrf") if user else None,
+            user=user,
         )
 
     @app.post("/api/login")
@@ -443,7 +497,9 @@ def create_app(instance_path=None):
         origin = request.headers.get("Origin")
         if origin and urlsplit(origin).netloc != request.host:
             return jsonify(error="origin_rejected"), 403
-        body = request.get_json(silent=True) or {}
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            body = {}
         ip = request.remote_addr
         now = time.monotonic()
         with lock:
@@ -452,24 +508,32 @@ def create_app(instance_path=None):
             if len(times) >= 10:
                 return jsonify(error="too_many_attempts"), 429
             times.append(now)
-        pwd = body.get("password", "")
-        if (
-            body.get("username") != "admin"
-            or not isinstance(pwd, str)
-            or len(pwd) > 1024
-            or not check_password_hash(cred["password_hash"], pwd)
-        ):
+        username = body.get("username")
+        pwd = body.get("password")
+        if not isinstance(username, str) or len(username) > 100 or not isinstance(pwd, str) or len(pwd) > 1024:
+            return jsonify(error="invalid_login"), 401
+        with closing(conn()) as c:
+            account = c.execute(
+                "SELECT id, username, password_hash, role, active, auth_version FROM users WHERE username=?",
+                (username,),
+            ).fetchone()
+        if not account or account[4] != 1 or not check_password_hash(account[2], pwd):
             return jsonify(error="invalid_login"), 401
         with lock:
             attempts.pop(ip, None)
         session.clear()
-        session["admin"] = True
+        session["user_id"] = account[0]
+        session["auth_version"] = account[5]
         session["csrf"] = secrets.token_hex(24)
         session.permanent = True
-        return jsonify(authenticated=True, csrf=session["csrf"])
+        return jsonify(
+            authenticated=True,
+            csrf=session["csrf"],
+            user={"id": account[0], "username": account[1], "role": account[3]},
+        )
 
     @app.post("/api/logout")
-    @guard
+    @guard(require_super_admin=False)
     def logout():
         session.clear()
         return jsonify(ok=True)
