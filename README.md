@@ -23,7 +23,7 @@ Only the public `GET /api/site` endpoint supports cross-origin reads. It returns
 
 ## Persistent data
 
-`MCSA_INSTANCE` selects the data directory. Default: local `instance/`. The supplied systemd service uses `/var/lib/mcsa-backend`. Keep credentials, SQLite and `media/` outside Git. Do not replace this directory when updating code.
+`MCSA_INSTANCE` selects the data directory. Default: local `instance/`. The supplied systemd service uses `/var/lib/mcsa-backend`. SQLite stores content and accounts; `credentials.json` retains the session secret and legacy administrator password hash. Keep credentials, SQLite and `media/` outside Git. Do not replace this directory when updating code. Use `python start.py --reset-password` to reset the local super administrator password; it updates the account record and invalidates existing sessions.
 
 `seed.json` is used only for a new database. Existing fifth-version content can be retained by copying the complete stopped `instance` contents into the selected data directory.
 
@@ -39,5 +39,5 @@ Optional environment overrides: `MCSA_FRONTEND_URL`, `MCSA_PUBLIC_URL`, `MCSA_AL
 python -m unittest discover -s tests -v
 ```
 
-The current account model is one administrator. Supabase authentication and multiple roles are not implemented in this package.
+Login and sessions now use the SQLite users table. The existing administrator is migrated as a super administrator. Account-management APIs, the account UI, and granular permissions are not yet implemented; ordinary administrator accounts cannot access existing protected routes. Supabase authentication is not used.
 Author：Guo Yu
