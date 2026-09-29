@@ -322,3 +322,514 @@
 .cms-brand { display:flex; align-items:center; gap:14px; padding:18px max(20px, calc((100vw - 1240px)/2)); background:white; border-bottom:1px solid var(--line); }
 .cms-brand img { width:42px; height:42px; object-fit:contain; }
 .cms-toolbar { top:0; }
+
+/* Admin-only design rules. Public site styles remain in style.css. */
+body {
+  --cms-surface: #fff;
+  --cms-surface-soft: #fff8f9;
+  --cms-border: #e9d9dd;
+  --cms-shadow: 0 10px 30px #60202d0c;
+}
+
+.cms {
+  padding-top: 36px;
+}
+
+.cms-brand {
+  min-height: 76px;
+  color: var(--deep);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.cms-heading {
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.cms-heading p {
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+.cms-toolbar {
+  gap: 10px;
+  align-items: center;
+  margin-top: 24px;
+  padding: 12px 0;
+  background: #fff9faed;
+  backdrop-filter: blur(12px);
+}
+
+.cms .button,
+.cms button:not(.upload-file) {
+  min-height: 42px;
+}
+
+.cms-toolbar .button,
+.cms-toolbar > button:not(.button) {
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s;
+}
+
+.cms-toolbar .button:hover {
+  transform: none;
+}
+
+.cms-toolbar > button:not(.button):hover,
+.editor-actions button:hover,
+.editor-body > button:hover,
+.upload-row > button:hover,
+.section-order-row button:hover {
+  background: var(--wash);
+  border-color: #d7aeb5;
+}
+
+#logout {
+  margin-left: auto;
+}
+
+#cms-status {
+  background: #f8f3f4;
+  border-color: var(--cms-border);
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+#cms-status.error {
+  background: #fff0f2;
+  border-color: #e7a9b2;
+}
+
+.cms-layout {
+  gap: 24px;
+  margin-top: 22px;
+}
+
+.cms-nav-hint {
+  display: none;
+}
+
+.cms-tabs {
+  gap: 4px;
+  padding: 8px;
+  background: var(--cms-surface);
+  border: 1px solid var(--cms-border);
+  border-radius: 14px;
+  box-shadow: var(--cms-shadow);
+}
+
+.cms-tabs button {
+  min-height: 44px;
+  border-radius: 9px;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.cms-tabs button:hover:not(.selected) {
+  background: var(--cms-surface-soft);
+  color: var(--deep);
+}
+
+.cms-tabs button.selected {
+  background: var(--red);
+  box-shadow: 0 4px 10px #b3293a20;
+}
+
+.cms-editor {
+  overflow-wrap: anywhere;
+}
+
+.cms-editor > h2 {
+  margin: 3px 0 18px;
+  font-size: clamp(22px, 2.5vw, 27px);
+}
+
+.cms-hint {
+  line-height: 1.65;
+}
+
+.cms-editor > .editor-body,
+.editor-card,
+.section-order-row {
+  background: var(--cms-surface);
+  border: 1px solid var(--cms-border);
+  border-radius: 14px;
+  box-shadow: var(--cms-shadow);
+}
+
+.cms-editor > .editor-body {
+  padding: 24px;
+}
+
+.editor-card {
+  overflow: hidden;
+}
+
+.editor-card > summary {
+  min-height: 54px;
+  padding: 16px 20px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.editor-card > summary:hover {
+  background: var(--cms-surface-soft);
+}
+
+.editor-card[open] > summary {
+  color: var(--deep);
+  border-bottom: 1px solid var(--cms-border);
+}
+
+.editor-card .editor-body {
+  padding: 22px;
+}
+
+.cms-field,
+.cms-check {
+  line-height: 1.5;
+}
+
+.cms-field input,
+.cms-field textarea,
+.cms-field select,
+.cms-login input {
+  min-height: 44px;
+  border-color: #d8c8cc;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 16px;
+}
+
+.cms-field textarea {
+  min-height: 100px;
+}
+
+.cms-field small {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cms-check {
+  min-height: 44px;
+}
+
+.cms-check input,
+.section-order-row input[type=checkbox] {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--red);
+}
+
+.editor-actions button,
+.editor-body > button,
+.upload-row > button,
+.section-order-row button {
+  min-height: 42px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.editor-actions .danger {
+  color: #9b1d2e;
+  border-color: #e5a8b0;
+  background: #fff8f9;
+}
+
+.editor-actions .danger:hover {
+  background: #ffeaed;
+}
+
+.upload-row {
+  min-width: 0;
+}
+
+.upload-row > img,
+.upload-row > .sprite {
+  max-width: 100%;
+  flex: none;
+}
+
+.upload-row .button {
+  min-height: 44px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+
+.section-order-row {
+  gap: 12px;
+  padding: 16px;
+}
+
+.section-order-row strong {
+  overflow-wrap: anywhere;
+}
+
+.cms-login {
+  width: min(100%, 440px);
+  border-color: var(--cms-border);
+  box-shadow: var(--cms-shadow);
+}
+
+.cms-login .button {
+  min-height: 44px;
+  border-radius: 10px;
+}
+
+.cms-preview > div {
+  gap: 12px;
+}
+
+.cms-preview[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.cms-preview iframe {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.cms-preview > div strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .cms-brand {
+    min-height: 64px;
+    padding: 10px 22px;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .cms-brand img {
+    width: 36px;
+    height: 36px;
+    flex: none;
+  }
+
+  .cms {
+    padding-top: 25px;
+    padding-bottom: calc(145px + env(safe-area-inset-bottom));
+  }
+
+  .cms-heading .button {
+    margin-top: 14px;
+  }
+
+  .cms-toolbar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 45;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    margin: 0;
+    padding: 10px max(22px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+    border-top: 1px solid var(--cms-border);
+    border-bottom: 0;
+    box-shadow: 0 -8px 26px #60202d17;
+  }
+
+  .cms-toolbar .button,
+  .cms-toolbar > button:not(.button) {
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px;
+    font-size: 13px;
+    text-align: center;
+    white-space: normal;
+  }
+
+  #logout {
+    margin-left: 0;
+  }
+
+  .cms-layout {
+    display: block;
+    margin-top: 18px;
+  }
+
+  .cms-nav-hint {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0 0 8px;
+  }
+
+  .cms-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    gap: 4px;
+    padding: 6px;
+    margin: 0 -4px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #d7aeb5 transparent;
+  }
+
+  .cms-tabs button {
+    flex: none;
+    min-height: 44px;
+    padding: 9px 12px;
+    white-space: nowrap;
+  }
+
+  .cms-editor > .editor-body,
+  .editor-card .editor-body {
+    padding: 16px;
+  }
+
+  .editor-card > summary {
+    padding: 14px 16px;
+  }
+
+  .editor-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .editor-actions button {
+    min-width: 0;
+  }
+
+  .editor-actions .danger {
+    grid-column: 1 / -1;
+  }
+
+  .upload-row {
+    align-items: flex-start;
+  }
+
+  .section-order-row strong {
+    width: 100%;
+  }
+
+  .cms-preview {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .cms-preview > div {
+    height: auto;
+    min-height: 60px;
+    padding: 10px 16px;
+  }
+
+  .cms-login {
+    margin-top: 35px;
+    padding: 22px;
+  }
+}
+
+@media (max-width: 390px) {
+  .cms-brand {
+    font-size: 12px;
+  }
+
+  .cms-toolbar {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 900px) and (max-height: 500px) {
+  .cms-brand {
+    min-height: 54px;
+    padding: 8px 24px;
+  }
+
+  .cms-brand img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .cms {
+    padding-top: 16px;
+    padding-bottom: 85px;
+  }
+
+  .cms h1 {
+    font-size: 28px;
+  }
+
+  .cms-heading p {
+    margin-top: 4px;
+  }
+
+  .cms-layout {
+    display: block;
+    margin-top: 14px;
+  }
+
+  .cms-nav-hint {
+    display: block;
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .cms-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    margin-bottom: 18px;
+  }
+
+  .cms-tabs button {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .cms-toolbar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 45;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 8px 24px;
+    border-top: 1px solid var(--cms-border);
+    border-bottom: 0;
+    box-shadow: 0 -8px 26px #60202d17;
+  }
+
+  .cms-toolbar .button,
+  .cms-toolbar > button:not(.button) {
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px;
+    font-size: 13px;
+    text-align: center;
+    white-space: normal;
+  }
+
+  #logout {
+    margin-left: 0;
+  }
+}

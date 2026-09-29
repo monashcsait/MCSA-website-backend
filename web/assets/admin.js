@@ -195,6 +195,7 @@
     if (element) {
       element.textContent = message;
       element.classList.toggle('error', error);
+      element.setAttribute('role', error ? 'alert' : 'status');
     }
   }
 
@@ -270,8 +271,13 @@
   }
 
   function render() {
-    root().innerHTML = `<section class="cms"><div class="cms-heading"><div><h1>网站内容管理</h1><p>用中文编辑，统一维护三语网站。</p></div><a class="button" href="${esc(window.MCSA_CONFIG.frontendUrl)}" target="_blank" rel="noopener noreferrer">查看网站 ↗</a></div><div class="cms-toolbar"><button class="button primary" id="save-site">保存并发布</button><button class="button" id="preview-site">预览未保存修改</button><a class="button" href="/api/backup">下载内容备份</a><button id="logout">退出登录</button></div><p id="cms-status" role="status">${dirty?'有未保存的修改。':'内容已载入。'}</p><div class="cms-layout"><nav class="cms-tabs">${Object.entries(names).map(([key,name])=>`<button data-section="${key}" class="${section===key?'selected':''}">${name}</button>`).join('')}</nav><div class="cms-editor"><h2>${names[section]}</h2>${contentEditor()}</div></div></section>`;
+    root().innerHTML = `<section class="cms"><div class="cms-heading"><div><h1>网站内容管理</h1><p>用中文编辑，统一维护三语网站。</p></div><a class="button" href="${esc(window.MCSA_CONFIG.frontendUrl)}" target="_blank" rel="noopener noreferrer">查看网站 ↗</a></div><div class="cms-toolbar" aria-label="内容操作"><button class="button primary" id="save-site">保存并发布</button><button class="button" id="preview-site">预览未保存修改</button><a class="button" href="/api/backup">下载内容备份</a><button id="logout">退出登录</button></div><p id="cms-status" role="status">${dirty?'有未保存的修改。':'内容已载入。'}</p><div class="cms-layout"><p class="cms-nav-hint">左右滑动切换管理栏目</p><nav class="cms-tabs" aria-label="管理栏目">${Object.entries(names).map(([key,name])=>`<button type="button" data-section="${key}" class="${section===key?'selected':''}" aria-pressed="${section===key}">${name}</button>`).join('')}</nav><div class="cms-editor"><h2>${names[section]}</h2>${contentEditor()}</div></div></section>`;
     bind();
+    if (getComputedStyle(root().querySelector('.cms-tabs')).flexDirection === 'row') {
+      const selected = root().querySelector('.cms-tabs .selected');
+      const tabs = selected.parentElement;
+      tabs.scrollLeft = selected.offsetLeft - (tabs.clientWidth - selected.clientWidth) / 2;
+    }
   }
 
   function remove(path) {
