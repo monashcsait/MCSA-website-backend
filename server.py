@@ -32,6 +32,58 @@ from content_delivery import deployment_settings, published_content
 
 ROOT = Path(__file__).resolve().parent
 SEED = json.loads((ROOT / "seed.json").read_text(encoding="utf-8"))
+ACCOUNT_PERMISSIONS = frozenset({"site.read", "site.write", "media.upload", "backup.download"})
+
+
+def account_input(body, *, creating=False):
+    if not isinstance(body, dict):
+        raise ValueError("invalid_account")
+    username = body.get("username")
+    role = body.get("role")
+    active = body.get("active", True)
+    permissions = body.get("permissions", [])
+    password = body.get("password", "")
+    if not isinstance(username, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{3,32}", username):
+        raise ValueError("invalid_username")
+    if not isinstance(role, str) or role not in {"super_admin", "admin"} or type(active) is not bool:
+        raise ValueError("invalid_role")
+    if (
+        not isinstance(permissions, list)
+        or any(not isinstance(item, str) or item not in ACCOUNT_PERMISSIONS for item in permissions)
+    ):
+        raise ValueError("invalid_permissions")
+    if len(permissions) != len(set(permissions)):
+        raise ValueError("invalid_permissions")
+    if role == "admin" and {"site.write", "media.upload"}.intersection(permissions) and "site.read" not in permissions:
+        raise ValueError("invalid_permissions")
+    if not isinstance(password, str) or len(password) > 1024 or (creating and len(password) < 12) or (password and len(password) < 12):
+        raise ValueError("invalid_password")
+    return username, role, active, [] if role == "super_admin" else sorted(permissions), password
+
+
+def effective_permissions(role, stored):
+    if role == "super_admin":
+        return sorted(ACCOUNT_PERMISSIONS)
+    try:
+        permissions = json.loads(stored)
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(permissions, list) or any(
+        not isinstance(item, str) or item not in ACCOUNT_PERMISSIONS for item in permissions
+    ):
+        return []
+    return sorted(set(permissions))
+
+
+def public_account(row):
+    return {
+        "id": row[0],
+        "username": row[1],
+        "role": row[2],
+        "permissions": effective_permissions(row[2], row[3]),
+        "active": bool(row[4]),
+        "createdAt": row[5],
+    }
 
 
 def valid_url(v, media=False):
@@ -419,18 +471,23 @@ def create_app(instance_path=None):
             return None
         with closing(conn()) as c:
             row = c.execute(
-                "SELECT id, username, role, active, auth_version FROM users WHERE id=?",
+                "SELECT id, username, role, permissions, active, auth_version FROM users WHERE id=?",
                 (user_id,),
             ).fetchone()
-        if not row or row[3] != 1 or row[4] != auth_version:
+        if not row or row[4] != 1 or row[5] != auth_version:
             session.clear()
             return None
-        return {"id": row[0], "username": row[1], "role": row[2]}
+        return {
+            "id": row[0],
+            "username": row[1],
+            "role": row[2],
+            "permissions": effective_permissions(row[2], row[3]),
+        }
 
-    def guard(fn=None, *, require_super_admin=True):
+    def guard(fn=None, *, require_super_admin=True, permission=None):
         if fn is None:
             return lambda protected: guard(
-                protected, require_super_admin=require_super_admin
+                protected, require_super_admin=require_super_admin, permission=permission
             )
 
         @wraps(fn)
@@ -438,8 +495,14 @@ def create_app(instance_path=None):
             user = current_user()
             if user is None:
                 return jsonify(error="login_required"), 401
-            if require_super_admin and user["role"] != "super_admin":
-                return jsonify(error="forbidden"), 403
+            if user["role"] != "super_admin":
+                allowed = (
+                    permission in user["permissions"]
+                    if permission is not None
+                    else not require_super_admin
+                )
+                if not allowed:
+                    return jsonify(error="forbidden"), 403
             if request.method not in ["GET", "HEAD"]:
                 csrf = session.get("csrf")
                 if not isinstance(csrf, str) or not csrf or not secrets.compare_digest(
@@ -479,7 +542,7 @@ def create_app(instance_path=None):
         return jsonify(error="file_too_large"), 413
 
     @app.get("/api/translation-status")
-    @guard
+    @guard(permission="site.read")
     def translation_status():
         return jsonify(configured=bool(os.environ.get("AZURE_TRANSLATOR_KEY")))
 
@@ -514,22 +577,27 @@ def create_app(instance_path=None):
             return jsonify(error="invalid_login"), 401
         with closing(conn()) as c:
             account = c.execute(
-                "SELECT id, username, password_hash, role, active, auth_version FROM users WHERE username=?",
+                "SELECT id, username, password_hash, role, permissions, active, auth_version FROM users WHERE username=?",
                 (username,),
             ).fetchone()
-        if not account or account[4] != 1 or not check_password_hash(account[2], pwd):
+        if not account or account[5] != 1 or not check_password_hash(account[2], pwd):
             return jsonify(error="invalid_login"), 401
         with lock:
             attempts.pop(ip, None)
         session.clear()
         session["user_id"] = account[0]
-        session["auth_version"] = account[5]
+        session["auth_version"] = account[6]
         session["csrf"] = secrets.token_hex(24)
         session.permanent = True
         return jsonify(
             authenticated=True,
             csrf=session["csrf"],
-            user={"id": account[0], "username": account[1], "role": account[3]},
+            user={
+                "id": account[0],
+                "username": account[1],
+                "role": account[3],
+                "permissions": effective_permissions(account[3], account[4]),
+            },
         )
 
     @app.post("/api/logout")
@@ -538,19 +606,100 @@ def create_app(instance_path=None):
         session.clear()
         return jsonify(ok=True)
 
+    @app.get("/api/admin/accounts")
+    @guard
+    def list_accounts():
+        with closing(conn()) as c:
+            rows = c.execute(
+                "SELECT id, username, role, permissions, active, created_at FROM users ORDER BY username"
+            ).fetchall()
+        return jsonify(accounts=[public_account(row) for row in rows])
+
+    @app.post("/api/admin/accounts")
+    @guard
+    def create_account():
+        try:
+            username, role, active, permissions, password = account_input(
+                request.get_json(silent=True), creating=True
+            )
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
+        try:
+            with closing(conn()) as c, c:
+                cursor = c.execute(
+                    "INSERT INTO users (username, password_hash, role, permissions, active) VALUES (?, ?, ?, ?, ?)",
+                    (username, generate_password_hash(password), role, json.dumps(permissions), int(active)),
+                )
+                row = c.execute(
+                    "SELECT id, username, role, permissions, active, created_at FROM users WHERE id=?",
+                    (cursor.lastrowid,),
+                ).fetchone()
+        except sqlite3.IntegrityError:
+            return jsonify(error="username_taken"), 409
+        return jsonify(account=public_account(row)), 201
+
+    @app.put("/api/admin/accounts/<int:user_id>")
+    @guard
+    def update_account(user_id):
+        try:
+            username, role, active, permissions, password = account_input(
+                request.get_json(silent=True)
+            )
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
+        encoded_permissions = json.dumps(permissions)
+        try:
+            with closing(conn()) as c, c:
+                c.execute("BEGIN IMMEDIATE")
+                previous = c.execute(
+                    "SELECT username, role, permissions, active FROM users WHERE id=?",
+                    (user_id,),
+                ).fetchone()
+                if previous is None:
+                    return jsonify(error="account_not_found"), 404
+                if previous[1] == "super_admin" and previous[3] == 1 and (
+                    role != "super_admin" or not active
+                ):
+                    remaining = c.execute(
+                        "SELECT COUNT(*) FROM users WHERE role='super_admin' AND active=1"
+                    ).fetchone()[0]
+                    if remaining <= 1:
+                        return jsonify(error="last_super_admin"), 409
+                changed = (
+                    previous != (username, role, encoded_permissions, int(active))
+                    or bool(password)
+                )
+                c.execute(
+                    """UPDATE users SET username=?, role=?, permissions=?, active=?,
+                        password_hash=COALESCE(?, password_hash),
+                        auth_version=auth_version+? WHERE id=?""",
+                    (
+                        username, role, encoded_permissions, int(active),
+                        generate_password_hash(password) if password else None,
+                        int(changed), user_id,
+                    ),
+                )
+                row = c.execute(
+                    "SELECT id, username, role, permissions, active, created_at FROM users WHERE id=?",
+                    (user_id,),
+                ).fetchone()
+        except sqlite3.IntegrityError:
+            return jsonify(error="username_taken"), 409
+        return jsonify(account=public_account(row))
+
     @app.get("/api/site")
     def public_site():
         rev, d = load()
         return jsonify(revision=rev, data=published_content(d, backend_url))
 
     @app.get("/api/admin/site")
-    @guard
+    @guard(permission="site.read")
     def admin_site():
         rev, d = load()
         return jsonify(revision=rev, data=d)
 
     @app.put("/api/admin/site")
-    @guard
+    @guard(permission="site.write")
     def save_site():
         body = request.get_json(silent=True)
         try:
@@ -577,7 +726,7 @@ def create_app(instance_path=None):
         return jsonify(saved=True, revision=rev + 1, data=d, warnings=warnings)
 
     @app.post("/api/upload")
-    @guard
+    @guard(permission="media.upload")
     def upload():
         f = request.files.get("file")
         if not f:
@@ -627,7 +776,7 @@ def create_app(instance_path=None):
         return send_from_directory(media, name)
 
     @app.get("/api/backup")
-    @guard
+    @guard(permission="backup.download")
     def backup():
         out = io.BytesIO()
         rev, d = load()

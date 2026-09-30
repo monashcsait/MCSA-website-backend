@@ -5,9 +5,17 @@
     esc,
     image
   } = window.MCSA;
-  let state, revision, csrf, dirty = false;
+  let state, revision, csrf, currentUser, accounts = [], dirty = false;
   let section = 'posts';
   const root = () => document.querySelector('#admin-root');
+  const isSuper = () => currentUser?.role === 'super_admin';
+  const can = permission => isSuper() || currentUser?.permissions?.includes(permission);
+  const accountPermissions = {
+    'site.read': '查看网站内容',
+    'site.write': '编辑并发布网站内容',
+    'media.upload': '上传图片',
+    'backup.download': '下载内容备份'
+  };
   const names = {
     posts: '活动与文章',
     pages: '页面文字',
@@ -183,7 +191,14 @@
         invalid_content: '内容格式有误，请检查链接、邮箱、日期和必填项。',
         too_many_attempts: '登录尝试过多，请五分钟后重试。',
         invalid_image: '仅支持有效的照片或动画文件。',
-        file_too_large: '图片不能超过十二兆字节。'
+        file_too_large: '图片不能超过十二兆字节。',
+        forbidden: '当前账号没有此功能的权限。',
+        invalid_username: '账号名需为 3—32 位英文字母、数字、点、下划线或短横线。',
+        invalid_password: '密码至少需要 12 个字符。',
+        invalid_permissions: '权限组合无效；编辑内容或上传图片需要同时具备查看权限。',
+        invalid_role: '账号角色或启用状态无效。',
+        username_taken: '账号名已被使用。',
+        last_super_admin: '至少需要保留一位启用中的超级管理员。'
       };
       throw Error(errors[result.error] || '操作失败，请稍后重试。');
     }
@@ -222,7 +237,7 @@
       return `<label class="cms-field">${esc(label)}<textarea data-path="${path}.zh">${esc(value.zh)}</textarea><small>${ready?'英文与繁体内容已就绪；修改后保存会同步更新。':'保存时自动翻译；繁体中文本地生成；英文未配置服务时标记待翻译。'}</small></label>`;
     }
     if (['image', 'logo', 'heroLogo', 'opening'].includes(key)) {
-      return `<div class="cms-field"><label>${esc(label)}<input data-path="${path}" value="${esc(value)}" placeholder="上传图片或填写图片网址"></label><div class="upload-row">${image(value,label,get(path.split('.').slice(0,-1).join('.'))?.crop)}<label class="button">上传图片<input class="upload-file" data-upload="${path}" type="file" accept="image/png,image/jpeg,image/gif,image/webp"></label><button type="button" data-clear="${path}">清除图片</button></div></div>`;
+      return `<div class="cms-field"><label>${esc(label)}<input data-path="${path}" value="${esc(value)}" placeholder="上传图片或填写图片网址"></label><div class="upload-row">${image(value,label,get(path.split('.').slice(0,-1).join('.'))?.crop)}${can('media.upload')?`<label class="button">上传图片<input class="upload-file" data-upload="${path}" type="file" accept="image/png,image/jpeg,image/gif,image/webp"></label>`:''}<button type="button" data-clear="${path}">清除图片</button></div></div>`;
     }
     if (key === 'placement' || key === 'departmentDirection') {
       const options = key === 'placement' ? [
@@ -269,8 +284,26 @@
     return `<button type="button" class="button primary" id="add-entry">添加${names[section]}</button><p class="cms-hint">${section==='departments'?'每个部门只需填写一个超链接：首页详情按钮、招新页面详情按钮和导航栏“部门招新”同步使用。修改并保存发布后，刷新官网即可生效。留空时详情按钮不可点击，导航不跳转。':section==='terms'?'按排序年份倒序显示。现任资料在“现任主席团”编辑；每届可继续添加成员。':section==='posts'?'首页显示最新三个已发布活动。相同日期以列表靠后的内容为新。取消勾选发布可保留为草稿。':'修改后点击“保存并发布”才会写入网站。'}</p>${entries.map((entry,index)=>editorCard(section+'.'+index,entry,index,section)).join('')}`;
   }
 
+  function accountForm(account) {
+    const existing = Boolean(account);
+    const selected = account?.permissions || [];
+    return `<form class="account-form editor-card" data-account-id="${existing?account.id:'new'}"><div class="editor-body"><h3>${existing?esc(account.username):'创建账号'}</h3><label class="cms-field">账号名<input name="username" value="${esc(account?.username || '')}" pattern="[A-Za-z0-9_.-]{3,32}" minlength="3" maxlength="32" autocomplete="off" required></label><label class="cms-field">${existing?'设置新密码（留空则不修改）':'初始密码'}<input name="password" type="password" minlength="12" maxlength="1024" autocomplete="new-password" ${existing?'':'required'}></label><label class="cms-field">角色<select name="role"><option value="admin" ${account?.role==='admin'?'selected':''}>普通管理员</option><option value="super_admin" ${account?.role==='super_admin'?'selected':''}>超级管理员</option></select></label><label class="cms-check"><input name="active" type="checkbox" ${account?.active===false?'':'checked'}>启用账号</label><fieldset class="account-permissions"><legend>普通管理员权限</legend><p class="cms-hint">超级管理员拥有全部权限；编辑内容和上传图片需要同时勾选查看内容。</p>${Object.entries(accountPermissions).map(([key,label])=>`<label class="cms-check"><input name="permissions" type="checkbox" value="${key}" ${selected.includes(key)?'checked':''}>${label}</label>`).join('')}</fieldset><button class="button primary" type="submit">${existing?'保存账号':'创建账号'}</button></div></form>`;
+  }
+
+  function accountEditor() {
+    return `<p class="cms-hint">账号停用或权限变更后，该账号的现有登录会话会失效。至少保留一位启用中的超级管理员。</p>${accountForm(null)}<h3>现有账号</h3>${accounts.map(accountForm).join('')}`;
+  }
+
   function render() {
-    root().innerHTML = `<section class="cms"><div class="cms-heading"><div><h1>网站内容管理</h1><p>用中文编辑，统一维护三语网站。</p></div><a class="button" href="${esc(window.MCSA_CONFIG.frontendUrl)}" target="_blank" rel="noopener noreferrer">查看网站 ↗</a></div><div class="cms-toolbar"><button class="button primary" id="save-site">保存并发布</button><button class="button" id="preview-site">预览未保存修改</button><a class="button" href="/api/backup">下载内容备份</a><button id="logout">退出登录</button></div><p id="cms-status" role="status">${dirty?'有未保存的修改。':'内容已载入。'}</p><div class="cms-layout"><nav class="cms-tabs">${Object.entries(names).map(([key,name])=>`<button data-section="${key}" class="${section===key?'selected':''}">${name}</button>`).join('')}</nav><div class="cms-editor"><h2>${names[section]}</h2>${contentEditor()}</div></div></section>`;
+    const sections = can('site.read') ? Object.entries(names) : [];
+    if (isSuper()) sections.push(['accounts', '账号与权限']);
+    if (!sections.length) section = '';
+    else if (!sections.some(([key]) => key === section)) section = sections[0][0];
+    const editing = section !== 'accounts' && can('site.read');
+    const editor = section === 'accounts' && isSuper() ? accountEditor()
+      : editing ? can('site.write') ? contentEditor() : `<p class="cms-hint">当前账号仅有查看权限。</p><fieldset disabled>${contentEditor()}</fieldset>`
+      : '<p class="cms-hint">当前账号没有内容管理权限。</p>';
+    root().innerHTML = `<section class="cms"><div class="cms-heading"><div><h1>网站管理后台</h1><p>${esc(currentUser?.username || '')} · ${isSuper()?'超级管理员':'普通管理员'}</p></div><a class="button" href="${esc(window.MCSA_CONFIG.frontendUrl)}" target="_blank" rel="noopener noreferrer">查看网站 ↗</a></div><div class="cms-toolbar">${editing&&can('site.write')?'<button class="button primary" id="save-site">保存并发布</button>':''}${editing?'<button class="button" id="preview-site">预览内容</button>':''}${can('backup.download')?'<a class="button" href="/api/backup">下载内容备份</a>':''}<button id="logout">退出登录</button></div><p id="cms-status" role="status">${dirty?'有未保存的修改。':'功能已载入。'}</p><div class="cms-layout"><nav class="cms-tabs">${sections.map(([key,name])=>`<button data-section="${key}" class="${section===key?'selected':''}">${name}</button>`).join('')}</nav><div class="cms-editor"><h2>${section==='accounts'?'账号与权限':names[section]||'可用功能'}</h2>${editor}</div></div></section>`;
     bind();
   }
 
@@ -296,7 +329,8 @@
   }
 
   function bind() {
-    document.querySelector('#preview-site').onclick = () => {
+    const previewButton = document.querySelector('#preview-site');
+    if (previewButton) previewButton.onclick = () => {
       const dialog = document.createElement('dialog');
       dialog.className = 'cms-preview';
       const frontend = new URL(window.MCSA_CONFIG.frontendUrl);
@@ -382,7 +416,8 @@
         status(error.message, true);
       }
     });
-    document.querySelector('#save-site').onclick = async event => {
+    const saveButton = document.querySelector('#save-site');
+    if (saveButton) saveButton.onclick = async event => {
       const button = event.currentTarget;
       button.disabled = true;
       status('正在保存、翻译并发布，请稍候…');
@@ -415,10 +450,40 @@
       dirty = false;
       location.reload();
     };
+    root().querySelectorAll('.account-form').forEach(form => form.onsubmit = async event => {
+      event.preventDefault();
+      const button = form.querySelector('[type="submit"]');
+      const id = form.dataset.accountId;
+      const payload = {
+        username: form.elements.namedItem('username').value.trim(),
+        password: form.elements.namedItem('password').value,
+        role: form.elements.namedItem('role').value,
+        active: form.elements.namedItem('active').checked,
+        permissions: [...form.querySelectorAll('[name="permissions"]:checked')].map(input => input.value)
+      };
+      button.disabled = true;
+      try {
+        await api(id === 'new' ? '/admin/accounts' : `/admin/accounts/${id}`, {
+          method: id === 'new' ? 'POST' : 'PUT',
+          body: JSON.stringify(payload)
+        });
+        if (id !== 'new' && Number(id) === currentUser.id) {
+          location.reload();
+          return;
+        }
+        accounts = (await api('/admin/accounts')).accounts;
+        render();
+        status(id === 'new' ? '账号已创建。' : '账号已更新。');
+      } catch (error) {
+        status(error.message, true);
+      } finally {
+        button.disabled = false;
+      }
+    });
   }
 
   function login() {
-    root().innerHTML = '<form class="cms-login"><h1>管理员登录</h1><p>登录后可以编辑网站所有栏目。</p><label>账号<input name="username" value="admin" autocomplete="username" required></label><label>密码<input name="password" type="password" autocomplete="current-password" required></label><button class="button primary">登录</button><p id="cms-status" role="status"></p></form>';
+    root().innerHTML = '<form class="cms-login"><h1>管理员登录</h1><p>登录后可使用分配给你的管理功能。</p><label>账号<input name="username" value="admin" autocomplete="username" required></label><label>密码<input name="password" type="password" autocomplete="current-password" required></label><button class="button primary">登录</button><p id="cms-status" role="status"></p></form>';
     root().querySelector('form').onsubmit = async event => {
       event.preventDefault();
       const form = new FormData(event.currentTarget);
@@ -428,6 +493,7 @@
           body: JSON.stringify(Object.fromEntries(form))
         });
         csrf = result.csrf;
+        currentUser = result.user;
         await load();
       } catch (error) {
         status(error.message, true);
@@ -435,12 +501,17 @@
     };
   }
   async function load() {
-    const result = await api('/admin/site');
-    state = result.data;
-    revision = result.revision;
+    if (can('site.read')) {
+      const result = await api('/admin/site');
+      state = result.data;
+      revision = result.revision;
+    }
+    if (isSuper()) accounts = (await api('/admin/accounts')).accounts;
     render();
-    const translation = await api('/translation-status');
-    if (!translation.configured) status('英文翻译服务尚未配置。简繁中文可直接保存；已有英文正常显示。');
+    if (can('site.read')) {
+      const translation = await api('/translation-status');
+      if (!translation.configured) status('英文翻译服务尚未配置。简繁中文可直接保存；已有英文正常显示。');
+    }
   }
   window.addEventListener('beforeunload', event => {
     if (dirty) {
@@ -450,6 +521,7 @@
   });
   api('/session').then(result => {
     csrf = result.csrf;
+    currentUser = result.user;
     return result.authenticated ? load() : login();
   }).catch(error => {
     login();

@@ -89,6 +89,30 @@
   padding: 20px
 }
 
+.account-form {
+  max-width: 720px
+}
+
+.account-form h3 {
+  margin: 0 0 20px
+}
+
+.account-permissions {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 20px 0;
+  padding: 15px 18px
+}
+
+.account-permissions legend {
+  font-weight: 700;
+  padding: 0 6px
+}
+
+.account-permissions .cms-check {
+  margin: 12px 0
+}
+
 .cms-field {
   display: block;
   font-size: 14px;
