@@ -33,10 +33,11 @@ from content_delivery import deployment_settings, published_content
 # 项目目录和默认内容模板；首次建库以及旧数据迁移都会用到 SEED。
 ROOT = Path(__file__).resolve().parent
 SEED = json.loads((ROOT / "seed.json").read_text(encoding="utf-8"))
+# 定义管理员权限
 # 普通管理员可被授予的权限；超级管理员始终拥有全部权限。
 ACCOUNT_PERMISSIONS = frozenset({"site.read", "site.write", "media.upload", "backup.download"})
 
-
+# 检查管理员账号输入
 def account_input(body, *, creating=False):
     """检查账号表单，并整理成写入数据库所需的字段。"""
     if not isinstance(body, dict):
@@ -65,6 +66,7 @@ def account_input(body, *, creating=False):
     return username, role, active, [] if role == "super_admin" else sorted(permissions), password
 
 
+# 算管理员实际权限
 def effective_permissions(role, stored):
     """计算账号实际权限；异常的权限数据按无权限处理。"""
     if role == "super_admin":
@@ -80,6 +82,7 @@ def effective_permissions(role, stored):
     return sorted(set(permissions))
 
 
+# 返回安全的账号信息
 def public_account(row):
     """生成可发给前端的账号信息，不包含密码哈希。"""
     return {
@@ -92,6 +95,7 @@ def public_account(row):
     }
 
 
+# 检查URL是否安全
 def valid_url(v, media=False):
     """只允许正常的网页链接，或符合规则的站内页面与图片路径。"""
     if not isinstance(v, str) or len(v) > 4000 or re.search(r"[\x00-\x20\\]", v):
@@ -124,6 +128,7 @@ def valid_url(v, media=False):
     )
 
 
+# 检查网站是否合法
 def validate(content):
     """保存内容前检查整份数据的结构、类型和取值范围。"""
     if not isinstance(content, dict) or set(content) != set(SEED):
@@ -294,6 +299,7 @@ def validate(content):
     return content
 
 
+#把旧版数据升级到新版
 def migrate(content):
     """把旧版内容补齐到当前结构，尽量保留已有文章和链接。"""
     if content.get("schemaVersion") == 4:
@@ -358,6 +364,7 @@ def migrate(content):
     return content
 
 
+# 重置管理员密码
 def reset_admin_account(instance_path, password_hash):
     """管理员重置密码时，同步更新数据库账号并使旧会话失效。"""
     db = Path(instance_path) / "site.sqlite3"
@@ -380,6 +387,7 @@ def reset_admin_account(instance_path, password_hash):
         )
 
 
+# ******创建整个Flask后端******
 def create_app(instance_path=None):
     """初始化本地数据、Flask 配置和所有网站接口。"""
     frontend_url, backend_url, allowed_origins = deployment_settings(ROOT)
@@ -410,6 +418,7 @@ def create_app(instance_path=None):
     cred = json.loads(credentials.read_text())
     db = inst / "site.sqlite3"
 
+    # 连接SQLite
     def conn():
         """连接 SQLite，并开启适合同时读写的 WAL 模式。"""
         c = sqlite3.connect(db, timeout=15)
@@ -476,12 +485,14 @@ def create_app(instance_path=None):
     attempts = {}
     lock = threading.Lock()
 
+    # 从数据库读取网站内容
     def load():
         """读取当前内容和修订号；旧格式会在返回前迁移。"""
         with conn() as c:
             r, d = c.execute("SELECT revision,data FROM site WHERE id=1").fetchone()
         return r, migrate(json.loads(d))
 
+    # 判断当前登录的是谁
     def current_user():
         """按会话里的账号 ID 重新查库，确认账号仍启用且会话未过期。"""
         user_id = session.get("user_id")
@@ -506,6 +517,7 @@ def create_app(instance_path=None):
             "permissions": effective_permissions(row[2], row[3]),
         }
 
+    # 权限检查
     def guard(fn=None, *, require_super_admin=True, permission=None):
         """保护接口：先检查登录与权限，写请求还要验证 CSRF。"""
         if fn is None:
@@ -584,6 +596,7 @@ def create_app(instance_path=None):
             user=user,
         )
 
+    # 登录
     @app.post("/api/login")
     def login():
         """验证账号密码，创建带 CSRF 令牌的登录会话。"""
@@ -633,6 +646,7 @@ def create_app(instance_path=None):
             },
         )
 
+    # 登出
     @app.post("/api/logout")
     @guard(require_super_admin=False)
     def logout():
@@ -650,6 +664,7 @@ def create_app(instance_path=None):
             ).fetchall()
         return jsonify(accounts=[public_account(row) for row in rows])
 
+    # 管理管理员账号
     @app.post("/api/admin/accounts")
     @guard
     def create_account():
@@ -726,12 +741,14 @@ def create_app(instance_path=None):
             return jsonify(error="username_taken"), 409
         return jsonify(account=public_account(row))
 
+    # 公开网站数据
     @app.get("/api/site")
     def public_site():
         """向官网返回可公开展示的内容，过滤未发布的信息。"""
         rev, d = load()
         return jsonify(revision=rev, data=published_content(d, backend_url))
 
+    # 后台网站数据
     @app.get("/api/admin/site")
     @guard(permission="site.read")
     def admin_site():
@@ -769,6 +786,7 @@ def create_app(instance_path=None):
             )
         return jsonify(saved=True, revision=rev + 1, data=d, warnings=warnings)
 
+    # 上传图片
     @app.post("/api/upload")
     @guard(permission="media.upload")
     def upload():
@@ -816,6 +834,7 @@ def create_app(instance_path=None):
             201,
         )
 
+    # 获取图片
     @app.get("/media/<name>")
     def get_media(name):
         """按安全文件名读取已上传的公开图片。"""
@@ -823,6 +842,7 @@ def create_app(instance_path=None):
             abort(404)
         return send_from_directory(media, name)
 
+    # 下载备份
     @app.get("/api/backup")
     @guard(permission="backup.download")
     def backup():
@@ -845,6 +865,7 @@ def create_app(instance_path=None):
             download_name="MCSA-content-backup.zip",
         )
 
+    # 前端配置
     @app.get("/assets/config.js")
     def config():
         """给后台页面提供 API 路径和官网地址。"""
@@ -852,11 +873,13 @@ def create_app(instance_path=None):
             "window.MCSA_CONFIG=" + json.dumps({"apiBase": "/api", "frontendUrl": frontend_url}).replace("<", "\\u003c") + ";", mimetype="text/javascript"
         )
 
+    # 后台首页
     @app.get("/")
     def home():
         """访问后台根路径时跳转到登录页面。"""
         return redirect("/admin.html")
 
+    # 返回HTML/CSS/JS
     @app.get("/<path:path>")
     def static(path):
         """提供后台静态文件，并阻止读取 web 目录之外的路径。"""
