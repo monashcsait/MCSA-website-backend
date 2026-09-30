@@ -1,4 +1,4 @@
-"""MCSA multi-page website and visual CMS. Serve with Waitress via start.py."""
+"""网站后台入口：管理内容、账号、图片和备份，并向前端提供公开数据。"""
 
 from pathlib import Path
 from datetime import timedelta
@@ -30,12 +30,16 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from PIL import Image, UnidentifiedImageError
 from content_delivery import deployment_settings, published_content
 
+# 项目目录和默认内容模板；首次建库以及旧数据迁移都会用到 SEED。
 ROOT = Path(__file__).resolve().parent
 SEED = json.loads((ROOT / "seed.json").read_text(encoding="utf-8"))
+# 定义管理员权限
+# 普通管理员可被授予的权限；超级管理员始终拥有全部权限。
 ACCOUNT_PERMISSIONS = frozenset({"site.read", "site.write", "media.upload", "backup.download"})
 
-
+# 检查管理员账号输入
 def account_input(body, *, creating=False):
+    """检查账号表单，并整理成写入数据库所需的字段。"""
     if not isinstance(body, dict):
         raise ValueError("invalid_account")
     username = body.get("username")
@@ -54,6 +58,7 @@ def account_input(body, *, creating=False):
         raise ValueError("invalid_permissions")
     if len(permissions) != len(set(permissions)):
         raise ValueError("invalid_permissions")
+    # 编辑或上传时也必须能读取内容，否则后台无法正常使用这些功能。
     if role == "admin" and {"site.write", "media.upload"}.intersection(permissions) and "site.read" not in permissions:
         raise ValueError("invalid_permissions")
     if not isinstance(password, str) or len(password) > 1024 or (creating and len(password) < 12) or (password and len(password) < 12):
@@ -61,7 +66,9 @@ def account_input(body, *, creating=False):
     return username, role, active, [] if role == "super_admin" else sorted(permissions), password
 
 
+# 算管理员实际权限
 def effective_permissions(role, stored):
+    """计算账号实际权限；异常的权限数据按无权限处理。"""
     if role == "super_admin":
         return sorted(ACCOUNT_PERMISSIONS)
     try:
@@ -75,7 +82,9 @@ def effective_permissions(role, stored):
     return sorted(set(permissions))
 
 
+# 返回安全的账号信息
 def public_account(row):
+    """生成可发给前端的账号信息，不包含密码哈希。"""
     return {
         "id": row[0],
         "username": row[1],
@@ -86,7 +95,9 @@ def public_account(row):
     }
 
 
+# 检查URL是否安全
 def valid_url(v, media=False):
+    """只允许正常的网页链接，或符合规则的站内页面与图片路径。"""
     if not isinstance(v, str) or len(v) > 4000 or re.search(r"[\x00-\x20\\]", v):
         return False
     if not v:
@@ -117,12 +128,14 @@ def valid_url(v, media=False):
     )
 
 
+# 检查网站是否合法
 def validate(content):
-    """Validate the editable tree before writing a new database revision."""
+    """保存内容前检查整份数据的结构、类型和取值范围。"""
     if not isinstance(content, dict) or set(content) != set(SEED):
         raise ValueError("invalid_content")
 
     def check(value, key=""):
+        # 递归检查嵌套字段，包括多语言文字、图片裁剪参数和链接。
         if isinstance(value, dict):
             if "zh" in value:
                 if set(value) != {"zh", "en", "hant"}:
@@ -176,6 +189,7 @@ def validate(content):
             or not isinstance(page["paragraphs"], list)
         ):
             raise ValueError("invalid_page")
+    # 每类内容至少需要哪些字段，以及列表条目的 ID 是否有效、重复。
     requirements = {
         "departments": {"id", "name", "intro", "recruitment", "url", "image"},
         "team": {"name", "role", "description", "image", "tags", "url"},
@@ -214,6 +228,7 @@ def validate(content):
                 ids.append(entry["id"])
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate_id")
+    # 以下是各栏目的额外业务规则，不能只靠字段是否存在来判断。
     if not content["team"]:
         raise ValueError("current_team_required")
     for term in content["terms"]:
@@ -229,6 +244,7 @@ def validate(content):
             raise ValueError("invalid_post")
         if post["date"] and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", post["date"]):
             raise ValueError("invalid_date")
+    # 网站设置和版式参数会直接影响页面展示，需要单独限制。
     settings = content["settings"]
     if (
         not set(SEED["settings"]).issubset(settings)
@@ -283,10 +299,12 @@ def validate(content):
     return content
 
 
+#把旧版数据升级到新版
 def migrate(content):
-    """Add new defaults, retaining the site's existing editorial content and links."""
+    """把旧版内容补齐到当前结构，尽量保留已有文章和链接。"""
     if content.get("schemaVersion") == 4:
         return content
+    # 先迁移多语言数据，再补入新版默认字段。
     from translations import convert_legacy_languages
 
     convert_legacy_languages(content)
@@ -328,7 +346,7 @@ def migrate(content):
         ):
             social["image"] = "images/instagram-qr.png"
             social["crop"] = None
-    # These sections are explicitly replaced by the requested homepage revision.
+    # 这些静态页面按当前版本模板更新；其他编辑内容尽量沿用旧数据。
     for page_key in [
         "about",
         "disclaimer",
@@ -346,8 +364,9 @@ def migrate(content):
     return content
 
 
+# 重置管理员密码
 def reset_admin_account(instance_path, password_hash):
-    """Sync the local password-reset command with an existing users table."""
+    """管理员重置密码时，同步更新数据库账号并使旧会话失效。"""
     db = Path(instance_path) / "site.sqlite3"
     if not db.exists():
         return
@@ -368,8 +387,11 @@ def reset_admin_account(instance_path, password_hash):
         )
 
 
+# ******创建整个Flask后端******
 def create_app(instance_path=None):
+    """初始化本地数据、Flask 配置和所有网站接口。"""
     frontend_url, backend_url, allowed_origins = deployment_settings(ROOT)
+    # instance 存运行数据；media 存上传的图片，凭据文件与源码分开保存。
     inst = Path(
         instance_path or os.environ.get("MCSA_INSTANCE", str(ROOT / "instance"))
     )
@@ -378,6 +400,7 @@ def create_app(instance_path=None):
     media.mkdir(exist_ok=True)
     credentials = inst / "credentials.json"
     if not credentials.exists():
+        # 首次启动时生成管理员密码哈希和用于签名会话的密钥。
         pwd = os.environ.get("MCSA_ADMIN_PASSWORD", "")
         if len(pwd) < 12:
             raise RuntimeError(
@@ -395,11 +418,14 @@ def create_app(instance_path=None):
     cred = json.loads(credentials.read_text())
     db = inst / "site.sqlite3"
 
+    # 连接SQLite
     def conn():
+        """连接 SQLite，并开启适合同时读写的 WAL 模式。"""
         c = sqlite3.connect(db, timeout=15)
         c.execute("PRAGMA journal_mode=WAL")
         return c
 
+    # 首次运行时建内容表和账号表；已有数据库则保留其中的数据。
     with conn() as c:
         c.execute(
             "CREATE TABLE IF NOT EXISTS site (id INTEGER PRIMARY KEY CHECK(id=1),revision INTEGER NOT NULL,data TEXT NOT NULL)"
@@ -423,12 +449,13 @@ def create_app(instance_path=None):
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )"""
         )
-        # Seed only during migration, so a deliberately removed account stays removed.
+        # 只在首次创建账号表时迁入旧管理员，避免重建已被删除的账号。
         if not users_table_exists:
             c.execute(
                 "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
                 ("admin", cred["password_hash"], "super_admin"),
             )
+    # 旧内容升级到 v4 前，留一份原始 JSON 供人工恢复。
     with conn() as connection:
         old_revision, old_json = connection.execute(
             "SELECT revision,data FROM site WHERE id=1"
@@ -444,6 +471,7 @@ def create_app(instance_path=None):
                     ),
                     encoding="utf-8",
                 )
+    # 会话 Cookie、上传大小等基础安全配置。
     app = Flask(__name__, static_folder=None)
     app.secret_key = cred["secret"]
     app.config.update(
@@ -457,12 +485,16 @@ def create_app(instance_path=None):
     attempts = {}
     lock = threading.Lock()
 
+    # 从数据库读取网站内容
     def load():
+        """读取当前内容和修订号；旧格式会在返回前迁移。"""
         with conn() as c:
             r, d = c.execute("SELECT revision,data FROM site WHERE id=1").fetchone()
         return r, migrate(json.loads(d))
 
+    # 判断当前登录的是谁
     def current_user():
+        """按会话里的账号 ID 重新查库，确认账号仍启用且会话未过期。"""
         user_id = session.get("user_id")
         auth_version = session.get("auth_version")
         if type(user_id) is not int or type(auth_version) is not int:
@@ -474,6 +506,7 @@ def create_app(instance_path=None):
                 "SELECT id, username, role, permissions, active, auth_version FROM users WHERE id=?",
                 (user_id,),
             ).fetchone()
+        # 停用账号或修改账号时，数据库中的版本变化会让旧会话失效。
         if not row or row[4] != 1 or row[5] != auth_version:
             session.clear()
             return None
@@ -484,7 +517,9 @@ def create_app(instance_path=None):
             "permissions": effective_permissions(row[2], row[3]),
         }
 
+    # 权限检查
     def guard(fn=None, *, require_super_admin=True, permission=None):
+        """保护接口：先检查登录与权限，写请求还要验证 CSRF。"""
         if fn is None:
             return lambda protected: guard(
                 protected, require_super_admin=require_super_admin, permission=permission
@@ -495,6 +530,7 @@ def create_app(instance_path=None):
             user = current_user()
             if user is None:
                 return jsonify(error="login_required"), 401
+            # 超级管理员直接通过；普通管理员按接口要求的权限判断。
             if user["role"] != "super_admin":
                 allowed = (
                     permission in user["permissions"]
@@ -503,6 +539,7 @@ def create_app(instance_path=None):
                 )
                 if not allowed:
                     return jsonify(error="forbidden"), 403
+            # 防止别的网站借用浏览器里现有的登录状态发起修改请求。
             if request.method not in ["GET", "HEAD"]:
                 csrf = session.get("csrf")
                 if not isinstance(csrf, str) or not csrf or not secrets.compare_digest(
@@ -516,6 +553,7 @@ def create_app(instance_path=None):
 
     @app.after_request
     def headers(r):
+        """为响应设置安全与缓存头，只允许公开内容接口跨域读取。"""
         r.headers["X-Content-Type-Options"] = "nosniff"
         r.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         r.headers["X-Frame-Options"] = "SAMEORIGIN"
@@ -526,7 +564,7 @@ def create_app(instance_path=None):
             or request.path in ["/", "/data/site.js", "/assets/config.js"]
             else "public, max-age=3600"
         )
-        # Only the published feed is readable cross-origin, without admin cookies.
+        # 只有公开内容可供指定的前端域名跨域读取，不开放后台接口。
         if request.path == "/api/site":
             r.vary.add("Origin")
             origin = request.headers.get("Origin")
@@ -539,15 +577,18 @@ def create_app(instance_path=None):
 
     @app.errorhandler(413)
     def large(e):
+        """把上传过大的异常转成前端可识别的错误。"""
         return jsonify(error="file_too_large"), 413
 
     @app.get("/api/translation-status")
     @guard(permission="site.read")
     def translation_status():
+        """告诉后台当前是否配置了英文自动翻译服务。"""
         return jsonify(configured=bool(os.environ.get("AZURE_TRANSLATOR_KEY")))
 
     @app.get("/api/session")
     def session_info():
+        """供后台刷新页面后恢复登录状态、角色和权限。"""
         user = current_user()
         return jsonify(
             authenticated=user is not None,
@@ -555,14 +596,17 @@ def create_app(instance_path=None):
             user=user,
         )
 
+    # 登录
     @app.post("/api/login")
     def login():
+        """验证账号密码，创建带 CSRF 令牌的登录会话。"""
         origin = request.headers.get("Origin")
         if origin and urlsplit(origin).netloc != request.host:
             return jsonify(error="origin_rejected"), 403
         body = request.get_json(silent=True)
         if not isinstance(body, dict):
             body = {}
+        # 同一 IP 五分钟内最多尝试十次，减少密码猜测风险。
         ip = request.remote_addr
         now = time.monotonic()
         with lock:
@@ -575,6 +619,7 @@ def create_app(instance_path=None):
         pwd = body.get("password")
         if not isinstance(username, str) or len(username) > 100 or not isinstance(pwd, str) or len(pwd) > 1024:
             return jsonify(error="invalid_login"), 401
+        # 账号和密码哈希存放在 SQLite users 表中。
         with closing(conn()) as c:
             account = c.execute(
                 "SELECT id, username, password_hash, role, permissions, active, auth_version FROM users WHERE username=?",
@@ -584,6 +629,7 @@ def create_app(instance_path=None):
             return jsonify(error="invalid_login"), 401
         with lock:
             attempts.pop(ip, None)
+        # 登录成功后重建会话，记录账号版本和写请求使用的 CSRF 令牌。
         session.clear()
         session["user_id"] = account[0]
         session["auth_version"] = account[6]
@@ -600,24 +646,29 @@ def create_app(instance_path=None):
             },
         )
 
+    # 登出
     @app.post("/api/logout")
     @guard(require_super_admin=False)
     def logout():
+        """清除当前账号的登录会话。"""
         session.clear()
         return jsonify(ok=True)
 
     @app.get("/api/admin/accounts")
     @guard
     def list_accounts():
+        """仅超级管理员可查看账号列表。"""
         with closing(conn()) as c:
             rows = c.execute(
                 "SELECT id, username, role, permissions, active, created_at FROM users ORDER BY username"
             ).fetchall()
         return jsonify(accounts=[public_account(row) for row in rows])
 
+    # 管理管理员账号
     @app.post("/api/admin/accounts")
     @guard
     def create_account():
+        """仅超级管理员可创建账号，密码先哈希再写入数据库。"""
         try:
             username, role, active, permissions, password = account_input(
                 request.get_json(silent=True), creating=True
@@ -641,6 +692,7 @@ def create_app(instance_path=None):
     @app.put("/api/admin/accounts/<int:user_id>")
     @guard
     def update_account(user_id):
+        """修改账号资料、权限或状态，并按需撤销旧会话。"""
         try:
             username, role, active, permissions, password = account_input(
                 request.get_json(silent=True)
@@ -650,6 +702,7 @@ def create_app(instance_path=None):
         encoded_permissions = json.dumps(permissions)
         try:
             with closing(conn()) as c, c:
+                # 在同一事务内检查和更新，避免并发修改时漏掉最后一位超级管理员。
                 c.execute("BEGIN IMMEDIATE")
                 previous = c.execute(
                     "SELECT username, role, permissions, active FROM users WHERE id=?",
@@ -665,6 +718,7 @@ def create_app(instance_path=None):
                     ).fetchone()[0]
                     if remaining <= 1:
                         return jsonify(error="last_super_admin"), 409
+                # 资料、权限或密码有变化时递增版本，迫使该账号重新登录。
                 changed = (
                     previous != (username, role, encoded_permissions, int(active))
                     or bool(password)
@@ -687,20 +741,25 @@ def create_app(instance_path=None):
             return jsonify(error="username_taken"), 409
         return jsonify(account=public_account(row))
 
+    # 公开网站数据
     @app.get("/api/site")
     def public_site():
+        """向官网返回可公开展示的内容，过滤未发布的信息。"""
         rev, d = load()
         return jsonify(revision=rev, data=published_content(d, backend_url))
 
+    # 后台网站数据
     @app.get("/api/admin/site")
     @guard(permission="site.read")
     def admin_site():
+        """向有查看权限的后台账号返回完整可编辑内容。"""
         rev, d = load()
         return jsonify(revision=rev, data=d)
 
     @app.put("/api/admin/site")
     @guard(permission="site.write")
     def save_site():
+        """校验、翻译并保存整份内容；修订号不一致时拒绝覆盖。"""
         body = request.get_json(silent=True)
         try:
             if not isinstance(body, dict) or type(body.get("revision")) != int:
@@ -710,10 +769,12 @@ def create_app(instance_path=None):
             return jsonify(error="invalid_content"), 400
         from translations import translate_changes
 
+        # 先检查客户端基于哪个版本编辑，再翻译改动。
         current_revision, previous = load()
         if current_revision != body["revision"]:
             return jsonify(error="revision_conflict"), 409
         warnings = translate_changes(d, previous)
+        # 写入前在事务中复查版本，防止两位管理员同时保存互相覆盖。
         with conn() as c:
             c.execute("BEGIN IMMEDIATE")
             rev = c.execute("SELECT revision FROM site WHERE id=1").fetchone()[0]
@@ -725,15 +786,18 @@ def create_app(instance_path=None):
             )
         return jsonify(saved=True, revision=rev + 1, data=d, warnings=warnings)
 
+    # 上传图片
     @app.post("/api/upload")
     @guard(permission="media.upload")
     def upload():
+        """校验上传图片的大小、格式和尺寸后，保存到 media 目录。"""
         f = request.files.get("file")
         if not f:
             return jsonify(error="missing_file"), 400
         raw = f.read(12 * 1024 * 1024 + 1)
         if len(raw) > 12 * 1024 * 1024:
             return jsonify(error="file_too_large"), 413
+        # 读取并验证真实图片内容，不能只相信上传时提供的文件名。
         try:
             im = Image.open(io.BytesIO(raw))
             fmt = im.format
@@ -759,6 +823,7 @@ def create_app(instance_path=None):
             Image.DecompressionBombError,
         ):
             return jsonify(error="invalid_image"), 400
+        # 用随机文件名保存，避免重名覆盖或暴露原始文件名。
         filename = secrets.token_hex(16) + "." + ext
         (media / filename).write_bytes(raw)
         return (
@@ -769,15 +834,19 @@ def create_app(instance_path=None):
             201,
         )
 
+    # 获取图片
     @app.get("/media/<name>")
     def get_media(name):
+        """按安全文件名读取已上传的公开图片。"""
         if not re.fullmatch(r"[a-f0-9]{32}\.(png|jpg|gif|webp)", name):
             abort(404)
         return send_from_directory(media, name)
 
+    # 下载备份
     @app.get("/api/backup")
     @guard(permission="backup.download")
     def backup():
+        """下载内容 JSON 和上传图片组成的 ZIP 备份。"""
         out = io.BytesIO()
         rev, d = load()
         with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
@@ -796,18 +865,24 @@ def create_app(instance_path=None):
             download_name="MCSA-content-backup.zip",
         )
 
+    # 前端配置
     @app.get("/assets/config.js")
     def config():
+        """给后台页面提供 API 路径和官网地址。"""
         return app.response_class(
             "window.MCSA_CONFIG=" + json.dumps({"apiBase": "/api", "frontendUrl": frontend_url}).replace("<", "\\u003c") + ";", mimetype="text/javascript"
         )
 
+    # 后台首页
     @app.get("/")
     def home():
+        """访问后台根路径时跳转到登录页面。"""
         return redirect("/admin.html")
 
+    # 返回HTML/CSS/JS
     @app.get("/<path:path>")
     def static(path):
+        """提供后台静态文件，并阻止读取 web 目录之外的路径。"""
         p = (ROOT / "web" / path).resolve()
         if not p.is_relative_to((ROOT / "web").resolve()) or not p.is_file():
             abort(404)
