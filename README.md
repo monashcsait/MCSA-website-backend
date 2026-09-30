@@ -39,5 +39,9 @@ Optional environment overrides: `MCSA_FRONTEND_URL`, `MCSA_PUBLIC_URL`, `MCSA_AL
 python -m unittest discover -s tests -v
 ```
 
-Login and sessions now use the SQLite users table. The existing administrator is migrated as a super administrator. Account-management APIs, the account UI, and granular permissions are not yet implemented; ordinary administrator accounts cannot access existing protected routes. Supabase authentication is not used.
+## Accounts and permissions
+
+Login and sessions use the SQLite `users` table. The existing administrator is migrated as a super administrator. In the CMS, only super administrators can open **账号与权限** to create, edit, or disable accounts and assign permissions. The same restriction applies to `GET/POST /api/admin/accounts` and `PUT /api/admin/accounts/<id>`; all writes require CSRF. Password hashes are never returned by these APIs.
+
+Ordinary administrators can be assigned `site.read`, `site.write`, `media.upload`, and `backup.download`. Editing or uploading requires read permission. These permissions are checked on the backend for every request and again against the database for existing sessions. Changing an account revokes its current sessions. At least one active super administrator must remain. These permissions cover the entire CMS content tree rather than individual sections. Supabase authentication is not used.
 Author：Guo Yu
