@@ -323,6 +323,132 @@
 .cms-brand img { width:42px; height:42px; object-fit:contain; }
 .cms-toolbar { top:0; }
 
+.cms-menu-toggle {
+  display: none;
+}
+
+body.cms-menu-open {
+  overflow: hidden;
+}
+
+.cms-menu-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  margin: 0;
+  width: min(340px, calc(100vw - 32px));
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 12px 0 40px #60202d25;
+}
+
+.cms-menu-drawer[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.cms-menu-drawer::backdrop {
+  background: #26141b80;
+}
+
+.cms-menu-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cms-menu-close {
+  min-height: 44px;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+.cms-menu-items {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+  gap: 6px;
+}
+
+.cms-menu-items button {
+  flex: none;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.cms-menu-items button:hover {
+  background: var(--wash);
+}
+
+.cms-menu-items button.selected {
+  color: var(--deep);
+  background: #fff0f2;
+  box-shadow: inset 4px 0 var(--red);
+}
+
+.cms-menu-help {
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.cms-menu-toggle:focus-visible,
+.cms-menu-drawer button:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px), (min-width: 761px) and (max-width: 900px) and (max-height: 500px) {
+  .cms-mobile-navigation .cms-tabs,
+  .cms-mobile-navigation .cms-nav-hint {
+    display: none;
+  }
+
+  .cms-mobile-navigation .cms-menu-toggle {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    width: 100%;
+    min-height: 48px;
+    margin-bottom: 18px;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--deep);
+    text-align: left;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: normal;
+  }
+}
+
 /* Admin-only design rules. Public site styles remain in style.css. */
 body {
   --cms-surface: #fff;
