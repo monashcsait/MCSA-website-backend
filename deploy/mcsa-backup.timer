@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily MCSA backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00
+Persistent=true
+Unit=mcsa-backup.service
+
+[Install]
+WantedBy=timers.target

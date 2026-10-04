@@ -111,6 +111,77 @@ class PublishingTests(unittest.TestCase):
         response = self.admin.put("/api/admin/site", headers=self.csrf, json=stale)
         self.assertEqual(response.status_code, 409)
 
+    def test_merchant_coordinates_and_publication(self):
+        data = deepcopy(self.current["data"])
+        data["merchants"] = [{
+            "id": "map-shop",
+            "name": {"zh": "地图测试商家", "en": "Map shop", "hant": "地圖測試商家"},
+            "text": {"zh": "测试优惠", "en": "Test offer", "hant": "測試優惠"},
+            "image": "",
+            "url": "",
+            "region": "clayton",
+            "category": "food",
+            "address": "Example address",
+            "latitude": -37.9,
+            "longitude": 145.1,
+            "published": False,
+        }]
+        self.save(data)
+        self.assertEqual(len(self.admin.get("/api/admin/site").json["data"]["merchants"]), 1)
+        self.assertEqual(self.visitor.get("/api/site").json["data"]["merchants"], [])
+
+        data = deepcopy(self.current["data"])
+        data["merchants"][0]["published"] = True
+        self.save(data)
+        public = self.visitor.get("/api/site").json["data"]["merchants"]
+        self.assertEqual(len(public), 1)
+        self.assertEqual(public[0]["address"], "Example address")
+        self.assertEqual(public[0]["latitude"], -37.9)
+        self.assertEqual(public[0]["longitude"], 145.1)
+
+        for changes in (
+            {"latitude": 91},
+            {"longitude": -181},
+            {"latitude": None},
+            {"longitude": None},
+            {"latitude": "-37.9"},
+            {"latitude": True},
+            {"published": "yes"},
+            {"address": 123},
+        ):
+            invalid = deepcopy(self.current["data"])
+            invalid["merchants"][0].update(changes)
+            response = self.admin.put(
+                "/api/admin/site", headers=self.csrf,
+                json={"revision": self.current["revision"], "data": invalid},
+            )
+            self.assertEqual(response.status_code, 400, changes)
+            expected = (
+                "invalid_merchant_address" if "address" in changes
+                else "invalid_merchant_published" if "published" in changes
+                else "invalid_merchant_coordinates"
+            )
+            self.assertEqual(response.json["error"], expected)
+
+    def test_legacy_merchant_remains_visible_with_empty_location(self):
+        data = deepcopy(self.current["data"])
+        data["merchants"] = [{
+            "id": "legacy-shop",
+            "name": {"zh": "旧商家", "en": "Old shop", "hant": "舊商家"},
+            "text": {"zh": "原有优惠", "en": "Old offer", "hant": "原有優惠"},
+            "image": "",
+            "url": "",
+            "region": "clayton",
+            "category": "food",
+        }]
+        self.save(data)
+        merchant = self.admin.get("/api/admin/site").json["data"]["merchants"][0]
+        self.assertEqual(merchant["address"], "")
+        self.assertIsNone(merchant["latitude"])
+        self.assertIsNone(merchant["longitude"])
+        self.assertTrue(merchant["published"])
+        self.assertEqual(len(self.visitor.get("/api/site").json["data"]["merchants"]), 1)
+
     def test_new_admin_shell_and_preview_target(self):
         self.assertEqual(self.visitor.get("/").location, "/admin.html")
         with self.visitor.get("/admin.html") as response:

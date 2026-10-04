@@ -26,16 +26,31 @@ from flask import (
     redirect,
     g,
 )
+# 处理密码: password -> hash function -> scrypt: 32768:8:1$....
 from werkzeug.security import check_password_hash, generate_password_hash
+# Python图片处理库
 from PIL import Image, UnidentifiedImageError
 from content_delivery import deployment_settings, published_content
 
 # 项目目录和默认内容模板；首次建库以及旧数据迁移都会用到 SEED。
+
+# 找到server.py所在的项目文件夹
 ROOT = Path(__file__).resolve().parent
 SEED = json.loads((ROOT / "seed.json").read_text(encoding="utf-8"))
 # 定义管理员权限
 # 普通管理员可被授予的权限；超级管理员始终拥有全部权限。
-ACCOUNT_PERMISSIONS = frozenset({"site.read", "site.write", "media.upload", "backup.download"})
+
+# site.read 查看后台内容
+# site.write 修改网站
+# merchant.read 查看商家、地区与类别
+# merchant.write 只修改商家、地区与类别
+# media.upload 上传图片
+# backup.download 下载备份
+ACCOUNT_PERMISSIONS = frozenset({
+    "site.read", "site.write", "merchant.read", "merchant.write",
+    "media.upload", "backup.download",
+})
+MERCHANT_SECTIONS = ("merchants", "regions", "categories")
 
 # 检查管理员账号输入
 def account_input(body, *, creating=False):
@@ -58,8 +73,12 @@ def account_input(body, *, creating=False):
         raise ValueError("invalid_permissions")
     if len(permissions) != len(set(permissions)):
         raise ValueError("invalid_permissions")
-    # 编辑或上传时也必须能读取内容，否则后台无法正常使用这些功能。
-    if role == "admin" and {"site.write", "media.upload"}.intersection(permissions) and "site.read" not in permissions:
+    # 编辑对应栏目需能读取它；上传图片需至少能读取一个可用栏目。
+    if role == "admin" and "site.write" in permissions and "site.read" not in permissions:
+        raise ValueError("invalid_permissions")
+    if role == "admin" and "merchant.write" in permissions and "merchant.read" not in permissions:
+        raise ValueError("invalid_permissions")
+    if role == "admin" and "media.upload" in permissions and not {"site.read", "merchant.read"}.intersection(permissions):
         raise ValueError("invalid_permissions")
     if not isinstance(password, str) or len(password) > 1024 or (creating and len(password) < 12) or (password and len(password) < 12):
         raise ValueError("invalid_password")
@@ -243,7 +262,40 @@ def validate(content):
         if post["page"] not in content["pages"] or type(post["published"]) != bool:
             raise ValueError("invalid_post")
         if post["date"] and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", post["date"]):
-            raise ValueError("invalid_date")
+            raise ValueError("invalid_date") 
+    region_ids = {item["id"] for item in content["regions"]}
+    category_ids = {item["id"] for item in content["categories"]}
+    for merchant in content["merchants"]:
+        if set(merchant) != {
+            "id", "name", "text", "image", "url", "region", "category",
+            "address", "latitude", "longitude", "published",
+        }:
+            raise ValueError("invalid_merchant_fields")
+        if (not isinstance(merchant["name"], dict) or "zh" not in merchant["name"]
+                or not isinstance(merchant["text"], dict) or "zh" not in merchant["text"]
+                or not isinstance(merchant["region"], str)
+                or not isinstance(merchant["category"], str)
+                or not isinstance(merchant["image"], str)
+                or not isinstance(merchant["url"], str)):
+            raise ValueError("invalid_merchant_fields")
+        if not isinstance(merchant.get("address"), str) or len(merchant["address"]) > 500:
+            raise ValueError("invalid_merchant_address")
+        if type(merchant.get("published")) is not bool:
+            raise ValueError("invalid_merchant_published")
+        latitude, longitude = merchant.get("latitude"), merchant.get("longitude")
+        if (latitude is None) != (longitude is None) or any(
+            type(value) not in (int, float) or not -limit <= value <= limit
+            for value, limit in ((latitude, 90), (longitude, 180)) if value is not None
+        ):
+            raise ValueError("invalid_merchant_coordinates")
+        if merchant["published"] and (
+            not merchant["name"]["zh"].strip()
+            or not isinstance(merchant["region"], str)
+            or merchant["region"] not in region_ids
+            or not isinstance(merchant["category"], str)
+            or merchant["category"] not in category_ids
+        ):
+            raise ValueError("invalid_merchant_reference")
     # 网站设置和版式参数会直接影响页面展示，需要单独限制。
     settings = content["settings"]
     if (
@@ -302,6 +354,13 @@ def validate(content):
 #把旧版数据升级到新版
 def migrate(content):
     """把旧版内容补齐到当前结构，尽量保留已有文章和链接。"""
+    # 旧商家没有地图字段；补默认值后仍可正常编辑和展示。
+    for merchant in content.get("merchants", []):
+        merchant.setdefault("address", "")
+        merchant.setdefault("latitude", None)
+        merchant.setdefault("longitude", None)
+        merchant.setdefault("published", True)
+
     if content.get("schemaVersion") == 4:
         return content
     # 先迁移多语言数据，再补入新版默认字段。
@@ -418,10 +477,17 @@ def create_app(instance_path=None):
     cred = json.loads(credentials.read_text())
     db = inst / "site.sqlite3"
 
+    class AutoClosingConnection(sqlite3.Connection):
+        def __exit__(self, exc_type, exc_value, traceback):
+            try:
+                return super().__exit__(exc_type, exc_value, traceback)
+            finally:
+                self.close()
+
     # 连接SQLite
     def conn():
-        """连接 SQLite，并开启适合同时读写的 WAL 模式。"""
-        c = sqlite3.connect(db, timeout=15)
+        """连接 SQLite, 并开启适合同时读写的 WAL 模式。"""
+        c = sqlite3.connect(db, timeout=15, factory=AutoClosingConnection)
         c.execute("PRAGMA journal_mode=WAL")
         return c
 
@@ -434,9 +500,13 @@ def create_app(instance_path=None):
             "INSERT OR IGNORE INTO site VALUES (1,0,?)",
             (json.dumps(SEED, ensure_ascii=False),),
         )
+
+        # 1.先问：users表之间存在吗？
         users_table_exists = c.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'"
         ).fetchone() is not None
+
+        # 2.确保users表现在存在
         c.execute(
             """CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
@@ -449,7 +519,9 @@ def create_app(instance_path=None):
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )"""
         )
+
         # 只在首次创建账号表时迁入旧管理员，避免重建已被删除的账号。
+        # 3.如果刚才发现它原本不存在，就创建第一个管理员
         if not users_table_exists:
             c.execute(
                 "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
@@ -579,6 +651,28 @@ def create_app(instance_path=None):
     def large(e):
         """把上传过大的异常转成前端可识别的错误。"""
         return jsonify(error="file_too_large"), 413
+
+    @app.errorhandler(500)
+    def internal_error(e):
+        """记录内部错误，给 API 客户端稳定且不泄露细节的响应。"""
+        cause = e.original_exception or e
+        app.logger.error(
+            "Unhandled request error: %s %s", request.method, request.path,
+            exc_info=(type(cause), cause, cause.__traceback__),
+        )
+        return jsonify(error="server_error"), 500
+
+    @app.get("/healthz")
+    def health():
+        """供运行检查使用，只报告存储是否可读，不暴露账号或路径。"""
+        try:
+            with closing(conn()) as c:
+                healthy = c.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+                healthy = healthy and c.execute("SELECT 1 FROM site WHERE id=1").fetchone() is not None
+            healthy = healthy and media.is_dir() and os.access(media, os.R_OK | os.W_OK)
+        except (OSError, sqlite3.Error):
+            healthy = False
+        return (jsonify(status="ok"), 200) if healthy else (jsonify(status="unavailable"), 503)
 
     @app.get("/api/translation-status")
     @guard(permission="site.read")
@@ -756,6 +850,49 @@ def create_app(instance_path=None):
         rev, d = load()
         return jsonify(revision=rev, data=d)
 
+    @app.get("/api/admin/merchants")
+    @guard(permission="merchant.read")
+    def admin_merchants():
+        """只返回商家相关栏目，供权限受限的管理员使用。"""
+        rev, d = load()
+        return jsonify(revision=rev, data={key: d[key] for key in MERCHANT_SECTIONS})
+
+    @app.put("/api/admin/merchants")
+    @guard(permission="merchant.write")
+    def save_merchants():
+        """只接收商家栏目，在事务中合并，防止通过 JSON 改动其他栏目。"""
+        body = request.get_json(silent=True)
+        if (not isinstance(body, dict) or type(body.get("revision")) is not int
+                or not isinstance(body.get("data"), dict)
+                or set(body["data"]) != set(MERCHANT_SECTIONS)):
+            return jsonify(error="invalid_content"), 400
+        from translations import translate_changes
+
+        rev, previous = load()
+        if rev != body["revision"]:
+            return jsonify(error="revision_conflict"), 409
+        updated = copy.deepcopy(previous)
+        updated.update(body["data"])
+        try:
+            validate(updated)
+        except ValueError as error:
+            code = str(error)
+            return jsonify(error=code if code.startswith("invalid_merchant_") else "invalid_content"), 400
+        except (KeyError, TypeError, AttributeError):
+            return jsonify(error="invalid_content"), 400
+        merchant_data = {key: updated[key] for key in MERCHANT_SECTIONS}
+        warnings = translate_changes(merchant_data, {key: previous[key] for key in MERCHANT_SECTIONS})
+        with conn() as c:
+            c.execute("BEGIN IMMEDIATE")
+            if c.execute("SELECT revision FROM site WHERE id=1").fetchone()[0] != rev:
+                return jsonify(error="revision_conflict"), 409
+            c.execute(
+                "UPDATE site SET data=?,revision=revision+1 WHERE id=1",
+                (json.dumps(updated, ensure_ascii=False),),
+            )
+        return jsonify(saved=True, revision=rev + 1,
+                       data={key: updated[key] for key in MERCHANT_SECTIONS}, warnings=warnings)
+
     @app.put("/api/admin/site")
     @guard(permission="site.write")
     def save_site():
@@ -764,8 +901,11 @@ def create_app(instance_path=None):
         try:
             if not isinstance(body, dict) or type(body.get("revision")) != int:
                 raise ValueError()
-            d = validate(body["data"])
-        except (ValueError, KeyError, TypeError, AttributeError):
+            d = validate(migrate(body["data"]))
+        except ValueError as error:
+            code = str(error)
+            return jsonify(error=code if code.startswith("invalid_merchant_") else "invalid_content"), 400
+        except (KeyError, TypeError, AttributeError):
             return jsonify(error="invalid_content"), 400
         from translations import translate_changes
 

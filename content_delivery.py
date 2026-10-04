@@ -39,9 +39,13 @@ def deployment_settings(root):
 
 
 def published_content(content, backend_url):
-    """Never publish draft posts; make CMS-owned image paths work across domains."""
+    """Hide draft posts and merchants; make CMS images work across domains."""
     result = deepcopy(content)
     result["posts"] = [post for post in result["posts"] if post.get("published") is True]
+    result["merchants"] = [
+        merchant for merchant in result["merchants"]
+        if merchant.get("published", True) is True
+    ]
 
     def resolve(value, key=""):
         if isinstance(value, dict):

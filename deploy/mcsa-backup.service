@@ -1,0 +1,16 @@
+[Unit]
+Description=Back up MCSA SQLite, accounts, credentials and uploads
+
+[Service]
+Type=oneshot
+User=mcsa
+Group=mcsa
+WorkingDirectory=/opt/mcsa-backend
+Environment=MCSA_INSTANCE=/var/lib/mcsa-backend
+Environment=MCSA_BACKUP_DIR=/var/lib/mcsa-backups
+StateDirectory=mcsa-backups
+StateDirectoryMode=0700
+ExecStart=/opt/mcsa-backend/.venv/bin/python /opt/mcsa-backend/operations.py backup
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
