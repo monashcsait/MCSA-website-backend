@@ -13,6 +13,8 @@
   const accountPermissions = {
     'site.read': '查看网站内容',
     'site.write': '编辑并发布网站内容',
+    'merchant.read': '查看折扣商家、地区与类别',
+    'merchant.write': '编辑并发布折扣商家',
     'media.upload': '上传图片',
     'backup.download': '下载内容备份'
   };
@@ -205,7 +207,8 @@
         forbidden: '当前账号没有此功能的权限。',
         invalid_username: '账号名需为 3—32 位英文字母、数字、点、下划线或短横线。',
         invalid_password: '密码至少需要 12 个字符。',
-        invalid_permissions: '权限组合无效；编辑内容或上传图片需要同时具备查看权限。',
+        invalid_permissions: '权限组合无效；编辑权限需要对应查看权限，上传图片需要网站或商家查看权限。',
+        invalid_merchant_reference: '发布商家前请填写名称，并选择有效地区和类别。',
         invalid_role: '账号角色或启用状态无效。',
         username_taken: '账号名已被使用。',
         last_super_admin: '至少需要保留一位启用中的超级管理员。'
@@ -302,7 +305,7 @@
   function accountForm(account) {
     const existing = Boolean(account);
     const selected = account?.permissions || [];
-    return `<form class="account-form editor-card" data-account-id="${existing?account.id:'new'}"><div class="editor-body"><h3>${existing?esc(account.username):'创建账号'}</h3><label class="cms-field">账号名<input name="username" value="${esc(account?.username || '')}" pattern="[A-Za-z0-9_.-]{3,32}" minlength="3" maxlength="32" autocomplete="off" required></label><label class="cms-field">${existing?'设置新密码（留空则不修改）':'初始密码'}<input name="password" type="password" minlength="12" maxlength="1024" autocomplete="new-password" ${existing?'':'required'}></label><label class="cms-field">角色<select name="role"><option value="admin" ${account?.role==='admin'?'selected':''}>普通管理员</option><option value="super_admin" ${account?.role==='super_admin'?'selected':''}>超级管理员</option></select></label><label class="cms-check"><input name="active" type="checkbox" ${account?.active===false?'':'checked'}>启用账号</label><fieldset class="account-permissions"><legend>普通管理员权限</legend><p class="cms-hint">超级管理员拥有全部权限；编辑内容和上传图片需要同时勾选查看内容。</p>${Object.entries(accountPermissions).map(([key,label])=>`<label class="cms-check"><input name="permissions" type="checkbox" value="${key}" ${selected.includes(key)?'checked':''}>${label}</label>`).join('')}</fieldset><button class="button primary" type="submit">${existing?'保存账号':'创建账号'}</button></div></form>`;
+    return `<form class="account-form editor-card" data-account-id="${existing?account.id:'new'}"><div class="editor-body"><h3>${existing?esc(account.username):'创建账号'}</h3><label class="cms-field">账号名<input name="username" value="${esc(account?.username || '')}" pattern="[A-Za-z0-9_.-]{3,32}" minlength="3" maxlength="32" autocomplete="off" required></label><label class="cms-field">${existing?'设置新密码（留空则不修改）':'初始密码'}<input name="password" type="password" minlength="12" maxlength="1024" autocomplete="new-password" ${existing?'':'required'}></label><label class="cms-field">角色<select name="role"><option value="admin" ${account?.role==='admin'?'selected':''}>普通管理员</option><option value="super_admin" ${account?.role==='super_admin'?'selected':''}>超级管理员</option></select></label><label class="cms-check"><input name="active" type="checkbox" ${account?.active===false?'':'checked'}>启用账号</label><fieldset class="account-permissions"><legend>普通管理员权限</legend><p class="cms-hint">超级管理员拥有全部权限；网站编辑需勾选网站查看，商家编辑需勾选商家查看，上传图片需至少一项查看权限。</p>${Object.entries(accountPermissions).map(([key,label])=>`<label class="cms-check"><input name="permissions" type="checkbox" value="${key}" ${selected.includes(key)?'checked':''}>${label}</label>`).join('')}</fieldset><button class="button primary" type="submit">${existing?'保存账号':'创建账号'}</button></div></form>`;
   }
 
   function accountEditor() {
@@ -310,15 +313,17 @@
   }
 
   function render() {
-    const sections = can('site.read') ? Object.entries(names) : [];
+    const sections = can('site.read') ? Object.entries(names) : can('merchant.read') ? ['merchants', 'regions', 'categories'].map(key => [key, names[key]]) : [];
     if (isSuper()) sections.push(['accounts', '账号与权限']);
     if (!sections.length) section = '';
     else if (!sections.some(([key]) => key === section)) section = sections[0][0];
-    const editing = section !== 'accounts' && can('site.read');
+    const merchantSection = ['merchants', 'regions', 'categories'].includes(section);
+    const editing = section !== 'accounts' && (can('site.read') || (merchantSection && can('merchant.read')));
+    const mayEdit = can('site.write') || (merchantSection && can('merchant.write'));
     const editor = section === 'accounts' && isSuper() ? accountEditor()
-      : editing ? can('site.write') ? contentEditor() : `<p class="cms-hint">当前账号仅有查看权限。</p><fieldset disabled>${contentEditor()}</fieldset>`
+      : editing ? mayEdit ? contentEditor() : `<p class="cms-hint">当前账号仅有查看权限。</p><fieldset disabled>${contentEditor()}</fieldset>`
       : '<p class="cms-hint">当前账号没有内容管理权限。</p>';
-    root().innerHTML = `<section class="cms"><div class="cms-heading"><div><h1>网站管理后台</h1><p>${esc(currentUser?.username || '')} · ${isSuper()?'超级管理员':'普通管理员'}</p></div><a class="button" href="${esc(window.MCSA_CONFIG.frontendUrl)}" target="_blank" rel="noopener noreferrer">查看网站 ↗</a></div><div class="cms-toolbar">${editing&&can('site.write')?'<button class="button primary" id="save-site">保存并发布</button>':''}${editing?'<button class="button" id="preview-site">预览内容</button>':''}${can('backup.download')?'<a class="button" href="/api/backup">下载内容备份</a>':''}<button id="logout">退出登录</button></div><p id="cms-status" role="status">${dirty?'有未保存的修改。':'功能已载入。'}</p><div class="cms-layout"><nav class="cms-tabs">${sections.map(([key,name])=>`<button data-section="${key}" class="${section===key?'selected':''}">${name}</button>`).join('')}</nav><div class="cms-editor"><h2>${section==='accounts'?'账号与权限':names[section]||'可用功能'}</h2>${editor}</div></div></section>`;
+    root().innerHTML = `<section class="cms"><div class="cms-heading"><div><h1>网站管理后台</h1><p>${esc(currentUser?.username || '')} · ${isSuper()?'超级管理员':'普通管理员'}</p></div><a class="button" href="${esc(window.MCSA_CONFIG.frontendUrl)}" target="_blank" rel="noopener noreferrer">查看网站 ↗</a></div><div class="cms-toolbar">${editing&&mayEdit?'<button class="button primary" id="save-site">保存并发布</button>':''}${editing&&can('site.read')?'<button class="button" id="preview-site">预览内容</button>':''}${can('backup.download')?'<a class="button" href="/api/backup">下载内容备份</a>':''}<button id="logout">退出登录</button></div><p id="cms-status" role="status">${dirty?'有未保存的修改。':'功能已载入。'}</p><div class="cms-layout"><nav class="cms-tabs">${sections.map(([key,name])=>`<button data-section="${key}" class="${section===key?'selected':''}">${name}</button>`).join('')}</nav><div class="cms-editor"><h2>${section==='accounts'?'账号与权限':names[section]||'可用功能'}</h2>${editor}</div></div></section>`;
     bind();
   }
 
@@ -443,18 +448,19 @@
       status('正在保存、翻译并发布，请稍候…');
       root().querySelector('.cms-layout').inert = true;
       try {
-        const result = await api('/admin/site', {
+        const merchantOnly = !can('site.write');
+        const result = await api(merchantOnly ? '/admin/merchants' : '/admin/site', {
           method: 'PUT',
           body: JSON.stringify({
             revision,
-            data: state
+            data: merchantOnly ? Object.fromEntries(['merchants', 'regions', 'categories'].map(key => [key, state[key]])) : state
           })
         });
         revision = result.revision;
-        state = result.data;
+        state = merchantOnly ? {...state, ...result.data} : result.data;
         dirty = false;
         render();
-        status(`已保存第 ${revision} 次更新。已勾选发布的文章和其他栏目将在官网下次打开或刷新时显示。` + (result.warnings.length ? ' ' + result.warnings.join(' ') : ''), result.warnings.length > 0);
+        status(`已保存第 ${revision} 次更新。已发布的内容将在官网下次打开或刷新时显示。` + (result.warnings.length ? ' ' + result.warnings.join(' ') : ''), result.warnings.length > 0);
       } catch (error) {
         status(error.message, true);
       } finally {
@@ -521,8 +527,8 @@
     };
   }
   async function load() {
-    if (can('site.read')) {
-      const result = await api('/admin/site');
+    if (can('site.read') || can('merchant.read')) {
+      const result = await api(can('site.read') ? '/admin/site' : '/admin/merchants');
       state = result.data;
       revision = result.revision;
     }
