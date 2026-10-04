@@ -43,6 +43,9 @@
     description: '介绍',
     url: '超链接（留空则不跳转）',
     image: '图片',
+    address: '商家详细地址',
+    latitude: '纬度',
+    longitude: '经度',
     account: '账号原文',
     date: '发布日期',
     published: '发布到网站',
@@ -134,7 +137,11 @@
       image: '',
       url: '',
       region: state.regions[0]?.id || '',
-      category: state.categories[0]?.id || ''
+      category: state.categories[0]?.id || '',
+      address: '',
+      latitude: null,
+      longitude: null,
+      published: false
     }),
     sponsors: () => ({
       id: uid(),
@@ -189,6 +196,9 @@
         login_required: '登录已过期，请刷新页面重新登录。',
         csrf_failed: '登录验证失效，请刷新页面。',
         invalid_content: '内容格式有误，请检查链接、邮箱、日期和必填项。',
+        invalid_merchant_address: '商家地址最多可填写 500 个字符。',
+        invalid_merchant_published: '商家的发布状态无效，请刷新页面后重试。',
+        invalid_merchant_coordinates: '请同时填写纬度和经度，并检查纬度为 -90 到 90、经度为 -180 到 180。',
         too_many_attempts: '登录尝试过多，请五分钟后重试。',
         invalid_image: '仅支持有效的照片或动画文件。',
         file_too_large: '图片不能超过十二兆字节。',
@@ -258,12 +268,17 @@
       })) : state[key === 'region' ? 'regions' : 'categories'];
       return `<label class="cms-field">${key==='page'?'所属页面':key==='region'?'地区':'种类'}<select data-path="${path}"><option value="">请选择</option>${options.map(item=>`<option value="${esc(item.id)}" ${item.id===value?'selected':''}>${esc(item.name.zh)}</option>`).join('')}</select></label>`;
     }
+    if (key === 'latitude' || key === 'longitude') {
+      const limit = key === 'latitude' ? 90 : 180;
+      return `<label class="cms-field">${esc(label)}<input data-path="${path}" type="number" step="any" min="-${limit}" max="${limit}" value="${esc(value ?? '')}" placeholder="可留空">${key==='latitude'?'<small>纬度和经度需同时填写；留空时商家不会显示地图标记。</small>':''}</label>`;
+    }
+    if (key === 'address') return `<label class="cms-field">${esc(label)}<input data-path="${path}" value="${esc(value)}" maxlength="500" placeholder="可留空"></label>`;
     if (typeof value === 'boolean') return `<label class="cms-check"><input data-path="${path}" type="checkbox" ${value?'checked':''}>${esc(label)}</label>`;
     return `<label class="cms-field">${esc(label)}<input data-path="${path}" type="${typeof value==='number'?'number':key==='date'?'date':'text'}" value="${esc(value)}"></label>`;
   }
 
   function objectFields(path, object) {
-    const order = ['name', 'title', 'page', 'date', 'role', 'description', 'text', 'intro', 'recruitment', 'year', 'image', 'region', 'category', 'url', 'account', 'published'];
+    const order = ['name', 'title', 'page', 'date', 'role', 'description', 'text', 'intro', 'recruitment', 'year', 'image', 'region', 'category', 'address', 'latitude', 'longitude', 'url', 'account', 'published'];
     return Object.entries(object).sort(([first], [second]) => {
       const position = key => order.includes(key) ? order.indexOf(key) : 100;
       return position(first) - position(second);
@@ -354,7 +369,12 @@
 
     root().querySelectorAll('[data-path]').forEach(input => input.oninput = () => {
       const current = get(input.dataset.path);
-      set(input.dataset.path, input.type === 'checkbox' ? input.checked : typeof current === 'number' ? Number(input.value) : input.value);
+      const key = input.dataset.path.split('.').pop();
+      const coordinate = key === 'latitude' || key === 'longitude';
+      const value = input.type === 'checkbox' ? input.checked
+        : coordinate ? (input.value === '' ? null : Number(input.value))
+        : typeof current === 'number' ? Number(input.value) : input.value;
+      set(input.dataset.path, value);
     });
     root().querySelectorAll('[data-section]').forEach(button => button.onclick = () => {
       section = button.dataset.section;

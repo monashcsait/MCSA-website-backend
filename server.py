@@ -26,15 +26,24 @@ from flask import (
     redirect,
     g,
 )
+# 处理密码: password -> hash function -> scrypt: 32768:8:1$....
 from werkzeug.security import check_password_hash, generate_password_hash
+# Python图片处理库
 from PIL import Image, UnidentifiedImageError
 from content_delivery import deployment_settings, published_content
 
 # 项目目录和默认内容模板；首次建库以及旧数据迁移都会用到 SEED。
+
+# 找到server.py所在的项目文件夹
 ROOT = Path(__file__).resolve().parent
 SEED = json.loads((ROOT / "seed.json").read_text(encoding="utf-8"))
 # 定义管理员权限
 # 普通管理员可被授予的权限；超级管理员始终拥有全部权限。
+
+# site.read 查看后台内容
+# site.write 修改网站
+# media.upload 上传图片
+# backup.download 下载备份
 ACCOUNT_PERMISSIONS = frozenset({"site.read", "site.write", "media.upload", "backup.download"})
 
 # 检查管理员账号输入
@@ -243,7 +252,7 @@ def validate(content):
         if post["page"] not in content["pages"] or type(post["published"]) != bool:
             raise ValueError("invalid_post")
         if post["date"] and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", post["date"]):
-            raise ValueError("invalid_date")
+            raise ValueError("invalid_date") 
     # 网站设置和版式参数会直接影响页面展示，需要单独限制。
     settings = content["settings"]
     if (
@@ -302,6 +311,13 @@ def validate(content):
 #把旧版数据升级到新版
 def migrate(content):
     """把旧版内容补齐到当前结构，尽量保留已有文章和链接。"""
+    # 旧商家没有地图字段；补默认值后仍可正常编辑和展示。
+    for merchant in content.get("merchants", []):
+        merchant.setdefault("address", "")
+        merchant.setdefault("latitude", None)
+        merchant.setdefault("longitude", None)
+        merchant.setdefault("published", True)
+
     if content.get("schemaVersion") == 4:
         return content
     # 先迁移多语言数据，再补入新版默认字段。
@@ -420,7 +436,7 @@ def create_app(instance_path=None):
 
     # 连接SQLite
     def conn():
-        """连接 SQLite，并开启适合同时读写的 WAL 模式。"""
+        """连接 SQLite, 并开启适合同时读写的 WAL 模式。"""
         c = sqlite3.connect(db, timeout=15)
         c.execute("PRAGMA journal_mode=WAL")
         return c
@@ -434,9 +450,13 @@ def create_app(instance_path=None):
             "INSERT OR IGNORE INTO site VALUES (1,0,?)",
             (json.dumps(SEED, ensure_ascii=False),),
         )
+
+        # 1.先问：users表之间存在吗？
         users_table_exists = c.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'"
         ).fetchone() is not None
+
+        # 2.确保users表现在存在
         c.execute(
             """CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
@@ -449,7 +469,9 @@ def create_app(instance_path=None):
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )"""
         )
+
         # 只在首次创建账号表时迁入旧管理员，避免重建已被删除的账号。
+        # 3.如果刚才发现它原本不存在，就创建第一个管理员
         if not users_table_exists:
             c.execute(
                 "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
