@@ -1,10 +1,10 @@
-# Admin P3 editing handoff
+# Admin editing, preview and publishing handoff
 
 Date: 2026-10-12 (Australia/Sydney).
 
 ## Scope and baseline
 
-`admin-p3-editing` starts from team `main` commit `06add5b`, including the account, scoped merchant, location and publication APIs. It integrates the existing P2 visual interface and collapsible mobile navigation with that backend, then improves the editing workflow.
+`admin-editing-preview-publish` starts from team `main` commit `06add5b`, including the account, scoped merchant, location and publication APIs. It integrates the existing visual interface and collapsible mobile navigation with that backend, then improves the editing workflow. The branch was previously named `admin-p3-editing`; its new name describes the delivered functions rather than the internal project phase.
 
 Files: `web/admin.html`, `web/assets/admin.css`, `admin.js`, `admin-runtime.js`, `admin-editing.js`, `admin-navigation.js`, and the two handoff documents in `docs/`.
 
