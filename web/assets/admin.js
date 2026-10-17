@@ -5,7 +5,9 @@
     esc,
     image
   } = window.MCSA;
-  let state, revision, csrf, currentUser, accounts = [], dirty = false;
+  let state, revision, csrf, currentUser, accounts = [], dirty = false, busy = false;
+  let validationErrors = [];
+  const editing = window.MCSAEditing;
   let section = 'posts';
   const root = () => document.querySelector('#admin-root');
   const isSuper = () => currentUser?.role === 'super_admin';
@@ -181,29 +183,36 @@
     };
     if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
     if (csrf) headers['X-CSRF-Token'] = csrf;
-    const response = await fetch('/api' + path, {
-      ...options,
-      headers
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), path.includes('/admin/') && options.method === 'PUT' ? 120000 : 45000);
+    let response;
+    try {
+      response = await fetch('/api' + path, {...options, headers, signal: controller.signal});
+    } catch (error) {
+      throw Error(error.name === 'AbortError'
+        ? '请求等待时间过长，当前修改仍保留。保存请求可能已经到达服务器，请先导出修改，再核对保存结果。'
+        : '无法连接服务器，当前修改仍保留。请检查网络；离开前可导出未保存内容。');
+    } finally { clearTimeout(timer); }
     let result;
     try {
       result = await response.json();
     } catch {
-      throw Error('请通过启动脚本打开后台，不能直接双击后台网页。');
+      throw Error(response.status === 413 ? '图片不能超过 12 MiB（约 12.6 MB）。' : '服务器返回了无法读取的响应，当前修改仍保留。请检查后台服务是否正常运行。');
     }
     if (!response.ok) {
       const errors = {
         invalid_login: '账号或密码不正确。',
-        revision_conflict: '其他管理员已经更新内容。请先复制未保存文字，再刷新页面重新编辑。',
-        login_required: '登录已过期，请刷新页面重新登录。',
-        csrf_failed: '登录验证失效，请刷新页面。',
+        revision_conflict: '其他管理员已经更新内容。当前修改仍保留，请先导出未保存内容，再刷新核对最新版本。系统不会自动合并。',
+        login_required: '登录已过期，当前修改仍保留。请先导出未保存内容，再刷新页面重新登录。',
+        csrf_failed: '登录验证失效，当前修改仍保留。请先导出未保存内容，再刷新页面重新登录。',
         invalid_content: '内容格式有误，请检查链接、邮箱、日期和必填项。',
         invalid_merchant_address: '商家地址最多可填写 500 个字符。',
         invalid_merchant_published: '商家的发布状态无效，请刷新页面后重试。',
         invalid_merchant_coordinates: '请同时填写纬度和经度，并检查纬度为 -90 到 90、经度为 -180 到 180。',
         too_many_attempts: '登录尝试过多，请五分钟后重试。',
-        invalid_image: '仅支持有效的照片或动画文件。',
-        file_too_large: '图片不能超过十二兆字节。',
+        invalid_image: '图片内容无效，或超过 2400 万像素／GIF 1000 帧；请使用 PNG、JPEG、GIF 或 WebP。',
+        file_too_large: '图片不能超过 12 MiB（约 12.6 MB）。',
+        server_error: '服务器暂时无法完成操作，当前修改仍保留。请稍后重试或联系后端负责人。',
         forbidden: '当前账号没有此功能的权限。',
         invalid_username: '账号名需为 3—32 位英文字母、数字、点、下划线或短横线。',
         invalid_password: '密码至少需要 12 个字符。',
@@ -223,12 +232,28 @@
     if (element) {
       element.textContent = message;
       element.classList.toggle('error', error);
+      element.setAttribute('role', error ? 'alert' : 'status');
     }
   }
 
   function markDirty() {
     dirty = true;
     status('有未保存的修改。');
+  }
+
+  function setBusy(active) {
+    busy = active;
+    root().setAttribute('aria-busy', String(active));
+    root().querySelector('.cms-layout')?.toggleAttribute('inert', active);
+    root().querySelectorAll('.cms-toolbar button').forEach(button => {
+      button.disabled = active || (button.id === 'export-draft' && !dirty);
+    });
+  }
+
+  function field(path, value, label) {
+    const message = editing.validateField(path, value, state);
+    const errorId = 'cms-error-' + encodeURIComponent(path);
+    return `<div class="cms-field-group" data-field-group="${esc(path)}">${rawField(path,value,label)}<small class="cms-field-error" id="${esc(errorId)}" ${message?'':'hidden'}>${esc(message)}</small></div>`;
   }
 
   function get(path) {
@@ -242,7 +267,7 @@
     markDirty();
   }
 
-  function field(path, value, label) {
+  function rawField(path, value, label) {
     const key = path.split('.').pop();
     label = label || fieldNames[key] || key;
     if (value && typeof value === 'object' && !Array.isArray(value) && 'zh' in value) {
@@ -250,7 +275,7 @@
       return `<label class="cms-field">${esc(label)}<textarea data-path="${path}.zh">${esc(value.zh)}</textarea><small>${ready?'英文与繁体内容已就绪；修改后保存会同步更新。':'保存时自动翻译；繁体中文本地生成；英文未配置服务时标记待翻译。'}</small></label>`;
     }
     if (['image', 'logo', 'heroLogo', 'opening'].includes(key)) {
-      return `<div class="cms-field"><label>${esc(label)}<input data-path="${path}" value="${esc(value)}" placeholder="上传图片或填写图片网址"></label><div class="upload-row">${image(value,label,get(path.split('.').slice(0,-1).join('.'))?.crop)}${can('media.upload')?`<label class="button">上传图片<input class="upload-file" data-upload="${path}" type="file" accept="image/png,image/jpeg,image/gif,image/webp"></label>`:''}<button type="button" data-clear="${path}">清除图片</button></div></div>`;
+      return `<div class="cms-field"><label>${esc(label)}<input data-path="${path}" value="${esc(value)}" placeholder="上传图片或填写图片网址"></label><div class="upload-row"><span class="cms-thumbnail">${image(value,label,get(path.split('.').slice(0,-1).join('.'))?.crop)}</span>${can('media.upload')?`<label class="button">${value?'替换图片':'上传图片'}<input class="upload-file" data-upload="${path}" type="file" accept="image/png,image/jpeg,image/gif,image/webp"></label>`:''}<button type="button" data-clear="${path}" ${value?'':'disabled'}>清除图片</button></div><small>支持 PNG、JPEG、GIF、WebP；单图最多 12 MiB（约 12.6 MB）、2400 万像素，GIF 最多 1000 帧。上传／替换／清除后需保存才生效。</small><small class="cms-image-status">${value?'':'尚未设置图片。'}</small></div>`;
     }
     if (key === 'placement' || key === 'departmentDirection') {
       const options = key === 'placement' ? [
@@ -276,6 +301,8 @@
       return `<label class="cms-field">${esc(label)}<input data-path="${path}" type="number" step="any" min="-${limit}" max="${limit}" value="${esc(value ?? '')}" placeholder="可留空">${key==='latitude'?'<small>纬度和经度需同时填写；留空时商家不会显示地图标记。</small>':''}</label>`;
     }
     if (key === 'address') return `<label class="cms-field">${esc(label)}<input data-path="${path}" value="${esc(value)}" maxlength="500" placeholder="可留空"></label>`;
+    if (key === 'url') return `<label class="cms-field">${esc(label)}<input data-path="${path}" value="${esc(value)}" inputmode="url" placeholder="https://example.com 或 contact.html"><small>支持完整 HTTP(S) 网址、站内 .html 页面或 #区块；留空则不跳转。</small></label>`;
+    if (key === 'departmentReset') return `<label class="cms-field">${esc(label)}<input data-path="${path}" value="${esc(value)}"><small>旧字段保留兼容；隐藏／删除待负责人确认。</small></label>`;
     if (typeof value === 'boolean') return `<label class="cms-check"><input data-path="${path}" type="checkbox" ${value?'checked':''}>${esc(label)}</label>`;
     return `<label class="cms-field">${esc(label)}<input data-path="${path}" type="${typeof value==='number'?'number':key==='date'?'date':'text'}" value="${esc(value)}"></label>`;
   }
@@ -290,16 +317,22 @@
 
   function editorCard(path, entry, index, kind) {
     const title = entry.name?.zh || entry.title?.zh || '未命名内容';
-    return `<details class="editor-card" ${index===0?'open':''}><summary>${index+1}. ${esc(title)}${kind==='posts'&&!entry.published?' · 草稿':''}</summary><div class="editor-body">${objectFields(path,entry)}${kind==='terms'?`<h3>本届成员</h3>${entry.members.map((member,i)=>editorCard(path+'.members.'+i,member,i,'member')).join('')}<button type="button" data-add-member="${path}.members">添加成员</button>`:''}<div class="editor-actions"><button type="button" data-move="${path}" data-direction="-1">上移</button><button type="button" data-move="${path}" data-direction="1">下移</button><button type="button" class="danger" data-delete="${path}">删除这条内容</button></div></div></details>`;
+    const list = get(path.split('.').slice(0,-1).join('.'));
+    return `<details class="editor-card" ${index===0?'open':''}><summary>${index+1}. ${esc(title)}${['posts','merchants'].includes(kind)&&!entry.published?' · 草稿':''}</summary><div class="editor-body">${objectFields(path,entry)}${kind==='terms'?`<h3>本届成员</h3>${entry.members.map((member,i)=>editorCard(path+'.members.'+i,member,i,'member')).join('')}<button type="button" data-add-member="${path}.members">添加成员</button>`:''}<div class="editor-actions"><button type="button" data-move="${path}" data-direction="-1" ${index===0?'disabled':''}>上移</button><button type="button" data-move="${path}" data-direction="1" ${index===list.length-1?'disabled':''}>下移</button><button type="button" class="danger" data-delete="${path}">删除这条内容</button></div></div></details>`;
   }
 
   function contentEditor() {
     if (section === 'homeSections') return `<p class="cms-hint">用上下按钮调整首页次序；关闭显示会隐藏该区块。导航保持原有内容。</p>${state.homeSections.map((item,index)=>`<div class="section-order-row"><strong>${esc(item.name.zh)}</strong><label><input type="checkbox" data-path="homeSections.${index}.visible" ${item.visible?'checked':''}>显示</label><button data-move="homeSections.${index}" data-direction="-1">上移</button><button data-move="homeSections.${index}" data-direction="1">下移</button></div>`).join('')}`;
 
-    if (['settings', 'layout', 'interfaceText'].includes(section)) return `<div class="editor-body">${objectFields(section,state[section])}</div>`;
+    if (['settings', 'layout', 'interfaceText'].includes(section)) return `${section==='interfaceText'?'<label class="cms-field">查找界面文案<input id="cms-field-search" type="search" placeholder="输入原文或关键词"></label>':''}<div class="editor-body">${objectFields(section,state[section])}</div>`;
     if (section === 'pages') return Object.entries(state.pages).map(([key, page]) => `<details class="editor-card"><summary>${esc(page.title.zh)}</summary><div class="editor-body">${field('pages.'+key+'.title',page.title)}${page.paragraphs.map((text,i)=>`<div>${field('pages.'+key+'.paragraphs.'+i,text,'正文段落 '+(i+1))}<button type="button" data-delete="pages.${key}.paragraphs.${i}">删除段落</button></div>`).join('')}<button type="button" data-add-paragraph="${key}">添加段落</button><p class="cms-hint">图片、附加文章和超链接请到“活动与文章”中选择此页面添加。关于我们在首页显示。</p></div></details>`).join('');
     const entries = state[section];
-    return `<button type="button" class="button primary" id="add-entry">添加${names[section]}</button><p class="cms-hint">${section==='departments'?'每个部门只需填写一个超链接：首页详情按钮、招新页面详情按钮和导航栏“部门招新”同步使用。修改并保存发布后，刷新官网即可生效。留空时详情按钮不可点击，导航不跳转。':section==='terms'?'按排序年份倒序显示。现任资料在“现任主席团”编辑；每届可继续添加成员。':section==='posts'?'首页显示最新三个已发布活动。相同日期以列表靠后的内容为新。取消勾选发布可保留为草稿。':'修改后点击“保存并发布”才会写入网站。'}</p>${entries.map((entry,index)=>editorCard(section+'.'+index,entry,index,section)).join('')}`;
+    const hint = section==='departments'?'每个部门只需填写一个超链接：首页详情按钮、招新页面详情按钮和导航栏“部门招新”同步使用。修改并保存发布后，刷新官网即可生效。留空时详情按钮不可点击，导航不跳转。'
+      : section==='terms'?'按排序年份倒序显示。现任资料在“现任主席团”编辑；每届可继续添加成员。'
+      : section==='posts'?'首页显示最新三个已发布活动。相同日期以列表靠后的内容为新。取消勾选发布可保留为草稿。'
+      : section==='merchants'?'新商家默认为草稿。勾选“发布到网站”并保存后才公开；纬度和经度可同时留空，需要地图标记时再填写并核对。'
+      : '修改后点击“保存并发布”才会写入网站；没有独立发布开关的栏目保存后进入公开内容。';
+    return `<button type="button" class="button primary" id="add-entry">添加${names[section]}</button><p class="cms-hint">${hint}</p>${entries.map((entry,index)=>editorCard(section+'.'+index,entry,index,section)).join('')}`;
   }
 
   function accountForm(account) {
@@ -310,6 +343,23 @@
 
   function accountEditor() {
     return `<p class="cms-hint">账号停用或权限变更后，该账号的现有登录会话会失效。至少保留一位启用中的超级管理员。</p>${accountForm(null)}<h3>现有账号</h3>${accounts.map(accountForm).join('')}`;
+  }
+
+  function validationSummary() {
+    return validationErrors.length ? `<strong>请先检查以下 ${validationErrors.length} 处内容，修改尚未保存：</strong><ul>${validationErrors.map(error=>`<li><button type="button" data-show-error="${esc(error.path)}">${esc(editing.pathLabel(error.path,state,names,fieldNames))}</button>：${esc(error.message)}</li>`).join('')}</ul>` : '';
+  }
+
+  function revealField(path) {
+    section = path.split('.')[0];
+    render();
+    const input = [...root().querySelectorAll('[data-path]')].find(element => element.dataset.path === path);
+    if (!input) return;
+    for (let parent = input.parentElement; parent; parent = parent.parentElement) {
+      if (parent.tagName === 'DETAILS') parent.open = true;
+      parent.hidden = false;
+    }
+    input.focus();
+    input.scrollIntoView({block: 'center'});
   }
 
   function render() {
@@ -323,12 +373,25 @@
     const editor = section === 'accounts' && isSuper() ? accountEditor()
       : editing ? mayEdit ? contentEditor() : `<p class="cms-hint">当前账号仅有查看权限。</p><fieldset disabled>${contentEditor()}</fieldset>`
       : '<p class="cms-hint">当前账号没有内容管理权限。</p>';
-    root().innerHTML = `<section class="cms"><div class="cms-heading"><div><h1>网站管理后台</h1><p>${esc(currentUser?.username || '')} · ${isSuper()?'超级管理员':'普通管理员'}</p></div><a class="button" href="${esc(window.MCSA_CONFIG.frontendUrl)}" target="_blank" rel="noopener noreferrer">查看网站 ↗</a></div><div class="cms-toolbar">${editing&&mayEdit?'<button class="button primary" id="save-site">保存并发布</button>':''}${editing&&can('site.read')?'<button class="button" id="preview-site">预览内容</button>':''}${can('backup.download')?'<a class="button" href="/api/backup">下载内容备份</a>':''}<button id="logout">退出登录</button></div><p id="cms-status" role="status">${dirty?'有未保存的修改。':'功能已载入。'}</p><div class="cms-layout"><nav class="cms-tabs">${sections.map(([key,name])=>`<button data-section="${key}" class="${section===key?'selected':''}">${name}</button>`).join('')}</nav><div class="cms-editor"><h2>${section==='accounts'?'账号与权限':names[section]||'可用功能'}</h2>${editor}</div></div></section>`;
+    if (validationErrors.length) validationErrors = window.MCSAEditing.validateContent(state);
+    root().innerHTML = `<section class="cms">
+      <div class="cms-heading"><div><h1>网站管理后台</h1><p>${esc(currentUser?.username || '')} · ${isSuper()?'超级管理员':'普通管理员'}</p></div><a class="button" href="${esc(window.MCSA_CONFIG.frontendUrl)}" target="_blank" rel="noopener noreferrer">查看网站 ↗</a></div>
+      <div class="cms-toolbar" aria-label="内容操作">
+        ${editing&&mayEdit?'<button class="button primary" id="save-site">保存并发布</button>':''}
+        ${editing&&can('site.read')?'<button class="button" id="preview-site">预览未保存内容</button>':''}
+        ${state?`<button type="button" id="export-draft" ${dirty?'':'disabled'}>导出未保存内容</button>`:''}
+        ${can('backup.download')?'<a class="button" href="/api/backup">下载内容备份</a>':''}<button id="logout">退出登录</button>
+      </div>
+      <p id="cms-status" role="status">${dirty?'有未保存的修改。':'功能已载入。'}</p>
+      <div id="cms-validation" class="cms-validation" role="alert" ${validationErrors.length?'':'hidden'}>${validationSummary()}</div>
+      <div class="cms-layout"><p class="cms-nav-hint">左右滑动切换管理栏目</p><nav class="cms-tabs" aria-label="管理栏目">${sections.map(([key,name])=>`<button type="button" data-section="${key}" class="${section===key?'selected':''}" aria-pressed="${section===key}">${name}</button>`).join('')}</nav><div class="cms-editor"><h2>${section==='accounts'?'账号与权限':names[section]||'可用功能'}</h2>${editor}</div></div>
+    </section>`;
     bind();
+    setBusy(busy);
   }
 
   function remove(path) {
-    if (!confirm('确定删除这条内容？保存后才会生效。')) return;
+    if (busy || !confirm(`确定删除「${window.MCSAEditing.pathLabel(path,state,names,fieldNames)}」？保存后才会生效。`)) return;
     const parts = path.split('.');
     const index = Number(parts.pop());
     const list = get(parts.join('.'));
@@ -348,31 +411,119 @@
     render();
   }
 
-  function bind() {
-    const previewButton = document.querySelector('#preview-site');
-    if (previewButton) previewButton.onclick = () => {
+  function exportDraft() {
+    if (!state || !dirty || busy) return;
+    const blob = new Blob([JSON.stringify({format:'mcsa-content-draft-v1', revision, data:state}, null, 2)], {type:'application/json;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `MCSA-未保存内容-${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    status('当前编辑内容已导出到文件，网站尚未保存这些修改。重新登录后可参照文件恢复编辑。');
+  }
+
+  function previewSite() {
+      if (busy) return;
+      let frontend;
+      try {
+        frontend = new URL(window.MCSA_CONFIG.frontendUrl);
+        if (!['http:','https:'].includes(frontend.protocol) || frontend.username || frontend.password) throw Error();
+      } catch { status('预览网址未正确配置，请联系负责人确认前端地址。',true); return; }
       const dialog = document.createElement('dialog');
       dialog.className = 'cms-preview';
-      const frontend = new URL(window.MCSA_CONFIG.frontendUrl);
-      const previewUrl = new URL('index.html?preview=1', frontend);
-      dialog.innerHTML = `<div><strong>首页预览 · 当前编辑内容</strong><button type="button">关闭预览</button></div><iframe title="首页预览" src="${esc(previewUrl.href)}"></iframe>`;
+      dialog.setAttribute('aria-labelledby','cms-preview-title');
+      const options = Object.entries(state.pages).map(([key,value])=>({id:key, name:value.title.zh || key}));
+      options.push({id:'departments',name:'部门列表'});
+      state.posts.forEach((post,index)=>options.push({id:'post:'+post.id,name:`文章 ${index+1}：${post.title.zh || '未命名'}${post.published?'':'（草稿）'}`}));
+      const defaults = {posts:state.posts[0]?'post:'+state.posts[0].id:'latest-events',departments:'departments',team:'home',terms:'presidents',merchants:'discounts',socials:'contact',sponsors:'sponsors'};
+      let selected = defaults[section] || 'home';
+      if (section === 'pages') selected = root().querySelector('.editor-card[open] [data-path]')?.dataset.path.split('.')[1] || 'home';
+      dialog.innerHTML = `<div class="cms-preview-heading"><strong id="cms-preview-title">预览当前编辑内容</strong><button type="button" class="cms-preview-close">关闭预览</button></div><label class="cms-preview-choice">选择页面或文章<select>${options.map(option=>`<option value="${esc(option.id)}" ${option.id===selected?'selected':''}>${esc(option.name)}</option>`).join('')}</select></label><p class="cms-preview-status" role="status">正在连接预览…</p><iframe title="当前编辑内容预览"></iframe>`;
       const frame = dialog.querySelector('iframe');
+      const selector = dialog.querySelector('select');
+      const hint = dialog.querySelector('.cms-preview-status');
+      let timeout;
+      let previewSnapshot;
+      function start() {
+        clearTimeout(timeout);
+        previewSnapshot = structuredClone(state);
+        previewSnapshot.merchants = previewSnapshot.merchants.filter(item=>item.published);
+        const id = selector.value;
+        const article = id.startsWith('post:') ? previewSnapshot.posts.find(post=>post.id===id.slice(5)) : null;
+        if (article) article.published = true;
+        const file = article?'article.html':id==='home'?'index.html':id+'.html';
+        const previewUrl = new URL(file,frontend);
+        previewUrl.searchParams.set('preview','1');
+        if (article) previewUrl.searchParams.set('id',article.id);
+        hint.textContent = '正在连接预览…';
+        hint.classList.remove('error');
+        frame.src = previewUrl.href;
+        timeout = setTimeout(()=>{
+          hint.textContent = '未连接到预览。请确认前端服务已启动，并且前端 API 地址指向当前后台；也可重新选择页面重试。编辑内容仍保留。';
+          hint.classList.add('error');
+        },10000);
+      }
       function receive(event) {
         if (event.source !== frame.contentWindow || event.origin !== frontend.origin || event.data?.type !== 'mcsa-preview-ready') return;
-        frame.contentWindow.postMessage({type: 'mcsa-preview-content', content: window.MCSA.previewContent(state)}, frontend.origin);
+        clearTimeout(timeout);
+        frame.contentWindow.postMessage({type: 'mcsa-preview-content', content: window.MCSA.previewContent(previewSnapshot)}, frontend.origin);
+        hint.classList.remove('error');
+        hint.textContent = selector.value.startsWith('post:') ? '已传入当前文章内容；草稿也可预览效果。本次预览不会保存或公开内容。' : '已传入当前编辑内容；列表按当前发布状态展示。本次预览不会保存或发布。';
       }
       window.addEventListener('message', receive);
       document.body.append(dialog);
       dialog.showModal();
-      function close() {
+      function cleanup() {
+        clearTimeout(timeout);
         window.removeEventListener('message', receive);
         dialog.remove();
+        document.querySelector('#preview-site')?.focus();
       }
-      dialog.querySelector('button').onclick = close;
-      dialog.addEventListener('cancel', close);
+      dialog.querySelector('.cms-preview-close').onclick = () => dialog.close();
+      dialog.addEventListener('close',cleanup,{once:true});
+      selector.onchange = start;
+      start();
+  }
+
+  function refreshValidation() {
+    root().querySelectorAll('[data-path]').forEach(input=>{
+      const message = editing.validateField(input.dataset.path,get(input.dataset.path),state);
+      const error = document.getElementById('cms-error-'+encodeURIComponent(input.dataset.path));
+      input.setAttribute('aria-invalid',String(Boolean(message)));
+      if (error) { error.hidden = !message; error.textContent = message; }
+    });
+    if (validationErrors.length) {
+      validationErrors = editing.validateContent(state);
+      const summary = document.querySelector('#cms-validation');
+      summary.hidden = !validationErrors.length;
+      summary.innerHTML = validationSummary();
+    }
+  }
+
+  function bindImageHints() {
+    root().querySelectorAll('.cms-thumbnail img').forEach(img=>{
+      if (img.dataset.feedbackBound) return;
+      img.dataset.feedbackBound = 'true';
+      const hint = img.closest('.cms-field').querySelector('.cms-image-status');
+      const loaded = () => {hint.textContent='图片缩略图已载入。';};
+      const failed = () => {hint.textContent='无法加载图片，请检查图片网址；当前编辑值仍保留。';};
+      img.addEventListener('error',failed);
+      img.addEventListener('load',loaded);
+      if (img.complete) (img.naturalWidth?loaded:failed)();
+    });
+  }
+
+  function bind() {
+    document.querySelector('#preview-site')?.addEventListener('click',previewSite);
+    document.querySelector('#export-draft')?.addEventListener('click',exportDraft);
+    document.querySelector('#cms-validation').onclick = event => {
+      const button = event.target.closest('[data-show-error]');
+      if (button) revealField(button.dataset.showError);
     };
 
     root().querySelectorAll('[data-path]').forEach(input => input.oninput = () => {
+      if (busy) return;
       const current = get(input.dataset.path);
       const key = input.dataset.path.split('.').pop();
       const coordinate = key === 'latitude' || key === 'longitude';
@@ -380,7 +531,36 @@
         : coordinate ? (input.value === '' ? null : Number(input.value))
         : typeof current === 'number' ? Number(input.value) : input.value;
       set(input.dataset.path, value);
+      if (editing.imageKeys.includes(key)) {
+        const parent = get(input.dataset.path.split('.').slice(0,-1).join('.'));
+        if ('crop' in parent) parent.crop = null;
+      }
+      document.querySelector('#export-draft').disabled = false;
+      refreshValidation();
     });
+    root().querySelectorAll('[data-path]').forEach(input=>{
+      const path = input.dataset.path;
+      input.id = 'cms-field-'+encodeURIComponent(path);
+      const error = document.getElementById('cms-error-'+encodeURIComponent(path));
+      if (error) input.setAttribute('aria-describedby',error.id);
+      if (editing.imageKeys.includes(path.split('.').at(-1))) input.onchange = () => {
+        const group = input.closest('.cms-field-group');
+        const value = get(path);
+        group.querySelector('.cms-thumbnail').innerHTML = image(value,fieldNames[path.split('.').at(-1)],get(path.split('.').slice(0,-1).join('.'))?.crop);
+        group.querySelector('[data-clear]').disabled = !value;
+        group.querySelector('.cms-image-status').textContent = value ? '正在检查图片…' : '尚未设置图片。';
+        bindImageHints();
+      };
+    });
+    refreshValidation();
+    bindImageHints();
+    const search = document.querySelector('#cms-field-search');
+    if (search) search.oninput = () => {
+      const query = search.value.trim().toLocaleLowerCase();
+      root().querySelectorAll('.cms-editor > .editor-body > .cms-field-group').forEach(group=>{
+        group.hidden = Boolean(query) && !group.textContent.toLocaleLowerCase().includes(query);
+      });
+    };
     root().querySelectorAll('[data-section]').forEach(button => button.onclick = () => {
       section = button.dataset.section;
       render();
@@ -388,7 +568,10 @@
     root().querySelectorAll('[data-delete]').forEach(button => button.onclick = () => remove(button.dataset.delete));
     root().querySelectorAll('[data-clear]').forEach(button => button.onclick = () => {
       set(button.dataset.clear, '');
+      const parent = get(button.dataset.clear.split('.').slice(0,-1).join('.'));
+      if ('crop' in parent) parent.crop = null;
       render();
+      status('图片已从当前编辑内容清除，请保存使修改生效。');
     });
     root().querySelectorAll('[data-move]').forEach(button => button.onclick = () => {
       const parts = button.dataset.move.split('.');
@@ -422,31 +605,54 @@
       });
     });
     root().querySelectorAll('[data-upload]').forEach(input => input.onchange = async () => {
-      if (!input.files[0]) return;
+      if (busy || !input.files[0]) return;
+      const file = input.files[0];
+      if (file.size > 12 * 1024 * 1024) {
+        status('图片不能超过 12 MiB（约 12.6 MB），原图片和当前修改仍保留。',true);
+        input.value = '';
+        return;
+      }
+      if (file.type && !['image/png','image/jpeg','image/gif','image/webp'].includes(file.type)) {
+        status('请选择 PNG、JPEG、GIF 或 WebP 图片，原图片和当前修改仍保留。',true);
+        input.value = '';
+        return;
+      }
       const body = new FormData();
-      body.append('file', input.files[0]);
+      body.append('file', file);
+      setBusy(true);
       status('正在上传图片…');
       try {
         const result = await api('/upload', {
           method: 'POST',
           body
         });
+        if (!result.url || !editing.validUrl(result.url,true)) throw Error('上传响应不完整，原图片和当前修改仍保留。请稍后重试。');
         set(input.dataset.upload, result.url);
         const parent = get(input.dataset.upload.split('.').slice(0, -1).join('.'));
         if ('crop' in parent) parent.crop = null;
         if (input.dataset.upload === 'settings.opening' && result.duration) state.settings.openingDuration = result.duration;
         render();
-        status('图片已上传，请保存以发布。');
+        status('图片已上传，尚未保存。保存后按该内容的发布状态生效。');
       } catch (error) {
         status(error.message, true);
+        input.value = '';
+      } finally {
+        setBusy(false);
       }
     });
     const saveButton = document.querySelector('#save-site');
     if (saveButton) saveButton.onclick = async event => {
-      const button = event.currentTarget;
-      button.disabled = true;
+      if (busy) return;
+      validationErrors = editing.validateContent(state);
+      if (validationErrors.length) {
+        render();
+        status('内容尚未保存，请检查提示中的字段。当前修改仍保留。',true);
+        revealField(validationErrors[0].path);
+        status('内容尚未保存，请检查提示中的字段。当前修改仍保留。',true);
+        return;
+      }
+      setBusy(true);
       status('正在保存、翻译并发布，请稍候…');
-      root().querySelector('.cms-layout').inert = true;
       try {
         const merchantOnly = !can('site.write');
         const result = await api(merchantOnly ? '/admin/merchants' : '/admin/site', {
@@ -456,30 +662,38 @@
             data: merchantOnly ? Object.fromEntries(['merchants', 'regions', 'categories'].map(key => [key, state[key]])) : state
           })
         });
+        const required = merchantOnly ? ['merchants','regions','categories'] : Object.keys(state);
+        if (result.saved !== true || !Number.isSafeInteger(result.revision) || !result.data || typeof result.data !== 'object' || Array.isArray(result.data) || required.some(key=>!(key in result.data))) {
+          throw Error('保存响应不完整，当前修改仍保留。请先导出内容并核对服务器是否已经保存。');
+        }
+        const warnings = Array.isArray(result.warnings) ? result.warnings : [];
         revision = result.revision;
         state = merchantOnly ? {...state, ...result.data} : result.data;
         dirty = false;
         render();
-        status(`已保存第 ${revision} 次更新。已发布的内容将在官网下次打开或刷新时显示。` + (result.warnings.length ? ' ' + result.warnings.join(' ') : ''), result.warnings.length > 0);
+        status(`已保存第 ${revision} 次更新。已发布的内容将在官网下次打开或刷新时显示。` + (warnings.length ? ' ' + warnings.join(' ') : ''), warnings.length > 0);
       } catch (error) {
         status(error.message, true);
       } finally {
-        button.disabled = false;
-        root().querySelector('.cms-layout').inert = false;
+        setBusy(false);
       }
     };
     document.querySelector('#logout').onclick = async () => {
+      if (busy) return;
       if (dirty && !confirm('有未保存修改，仍然退出吗？')) return;
-      await api('/logout', {
-        method: 'POST'
-      });
-      dirty = false;
-      location.reload();
+      setBusy(true);
+      try {
+        await api('/logout', {method:'POST'});
+        dirty = false;
+        location.reload();
+      } catch (error) { status(error.message,true); }
+      finally { setBusy(false); }
     };
     root().querySelectorAll('.account-form').forEach(form => form.onsubmit = async event => {
       event.preventDefault();
       const button = form.querySelector('[type="submit"]');
       const id = form.dataset.accountId;
+      if (id !== 'new' && Number(id) === currentUser.id && dirty && !confirm('修改自己的账号会重新登录，未保存内容可能丢失。已导出内容并确认继续吗？')) return;
       const payload = {
         username: form.elements.namedItem('username').value.trim(),
         password: form.elements.namedItem('password').value,

@@ -1,4 +1,6 @@
 instance/
+instance-demo*/
+demo-backups/
 instance-before-*/
 .venv/
 __pycache__/

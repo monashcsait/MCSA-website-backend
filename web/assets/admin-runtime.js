@@ -7,7 +7,8 @@
 
   function image(source, alt, crop) {
     if (!source) return '';
-    const url = new URL(source, location.href);
+    let url;
+    try { url = new URL(source, location.href); } catch { return ''; }
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return '';
     if (crop) {
       const [x, y, width, height, originalWidth] = crop;
