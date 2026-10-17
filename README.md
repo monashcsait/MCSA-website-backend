@@ -10,6 +10,8 @@ python -m venv .venv
 
 Windows users can run `START-WINDOWS.bat`. First launch asks for the administrator password. Open `/admin.html`; username is `admin`.
 
+For the conference's persistent **local demonstration**, see [local-demo.md](docs/local-demo.md). `START-LOCAL-DEMO.bat` serves the CMS and the adjacent website checkout on loopback port 18091, using a separate ignored `instance-demo` directory. Production addresses are not changed.
+
 ## Connect the public website
 
 Set `deployment.json`:
